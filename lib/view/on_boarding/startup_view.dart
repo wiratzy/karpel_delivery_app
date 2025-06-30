@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:provider/provider.dart';
 import 'package:kons2/providers/auth_provider.dart';
+import 'dart:io'; // Diperlukan untuk keluar dari aplikasi
 
 class StartupView extends StatefulWidget {
   const StartupView({super.key});
@@ -13,47 +14,103 @@ class StartupView extends StatefulWidget {
 class _StartupViewState extends State<StartupView> {
   static const double allowedLatitude = -6.327;
   static const double allowedLongitude = 108.323;
-  static const double allowedRadiusInMeters = 25000; // 20 km
+  static const double allowedRadiusInMeters = 25000; // 25 km
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      await Provider.of<AuthProvider>(context, listen: false).init();
-      checkUserLocation();
-    });
+    // Panggil satu fungsi utama yang mengurus semuanya.
+    _initializeAndNavigate();
   }
 
-  void checkUserLocation() async {
-    try {
-      bool allowed = await isUserInAllowedArea();
+  /// Fungsi utama yang mengurus semua proses saat startup:
+  /// 1. Memuat sesi pengguna (token & user data).
+  /// 2. Memeriksa izin dan lokasi pengguna.
+  /// 3. Menentukan halaman selanjutnya berdasarkan status login dan role.
+  Future<void> _initializeAndNavigate() async {
+    // Menunggu frame pertama selesai di-render untuk memastikan context valid.
+    await WidgetsBinding.instance.endOfFrame;
 
-      if (!allowed) {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    try {
+      // 1. Muat sesi pengguna dari storage. AuthProvider akan tahu siapa pengguna saat ini.
+      await authProvider.init();
+
+      // 2. Periksa apakah pengguna berada di dalam area yang diizinkan.
+      //    Jika tidak, tampilkan dialog dan hentikan proses.
+      bool isAllowed = await isUserInAllowedArea();
+      if (!isAllowed) {
         _showLocationBlockedDialog();
-        return;
+        return; 
       }
 
-      await Future.delayed(const Duration(seconds: 2));
-      goNextPage();
+      // 3. Panggil logika navigasi yang sudah benar dan terpusat.
+      _navigateBasedOnAuthState(authProvider);
+
     } catch (e) {
-      _showErrorDialog("Gagal mendeteksi lokasi.\nPastikan GPS diaktifkan.");
+      // Tangani semua kemungkinan error (misal: GPS mati, izin ditolak, dll).
+      _showErrorDialog("Gagal memulai aplikasi: ${e.toString()}");
     }
   }
 
+  /// Logika navigasi yang terpusat dan tidak ambigu.
+  /// Fungsi ini adalah satu-satunya yang memutuskan "ke mana harus pergi".
+  void _navigateBasedOnAuthState(AuthProvider auth) {
+    if (!mounted) return;
+
+    // KONDISI 1: Pengguna sudah login dan datanya ada.
+    if (auth.isLoggedIn && auth.user != null) {
+      final userRole = auth.user!.role;
+
+      // Tentukan halaman berdasarkan role.
+      switch (userRole) {
+        case 'admin':
+          Navigator.pushReplacementNamed(context, '/admin');
+          break;
+        case 'restaurant_owner':
+          Navigator.pushReplacementNamed(context, '/restaurantOwner');
+          break;
+        case 'driver':
+          Navigator.pushReplacementNamed(context, '/driver');
+          break;
+        
+        case 'customer':
+          // BENAR: Pengecekan onboarding HANYA ada di dalam case 'customer'.
+          if (auth.isOnboardingCompleted) {
+            Navigator.pushReplacementNamed(context, '/main');
+          } else {
+            Navigator.pushReplacementNamed(context, '/onBoarding');
+          }
+          break;
+          
+        default:
+          // Jika role tidak dikenal, anggap sesi tidak valid.
+          Navigator.pushReplacementNamed(context, '/welcome');
+      }
+    } 
+    // KONDISI 2: Pengguna TIDAK login.
+    else {
+      // Langsung arahkan ke halaman welcome/login.
+      Navigator.pushReplacementNamed(context, '/welcome');
+    }
+  }
+
+  /// Memeriksa izin dan menghitung jarak lokasi pengguna.
   Future<bool> isUserInAllowedArea() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) throw Exception('Layanan lokasi tidak aktif');
+    if (!serviceEnabled) throw Exception('Layanan lokasi (GPS) tidak aktif.');
 
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        throw Exception('Izin lokasi ditolak');
+        throw Exception('Izin lokasi ditolak oleh pengguna.');
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      throw Exception('Izin lokasi ditolak permanen');
+      throw Exception('Izin lokasi ditolak permanen. Harap aktifkan melalui pengaturan aplikasi.');
     }
 
     Position position = await Geolocator.getCurrentPosition(
@@ -70,30 +127,7 @@ class _StartupViewState extends State<StartupView> {
     return distance <= allowedRadiusInMeters;
   }
 
-  void goNextPage() {
-    final auth = Provider.of<AuthProvider>(context, listen: false);
-    if (auth.token != null) {
-      if (auth.user?.role == 'customer' && !auth.isOnboardingCompleted) {
-        Navigator.pushReplacementNamed(context, '/onBoarding');
-      } else {
-        switch (auth.user?.role) {
-          case 'admin':
-            Navigator.pushReplacementNamed(context, '/admin');
-            break;
-          case 'restaurant_owner':
-            Navigator.pushReplacementNamed(context, '/restaurantOwner');
-            break;
-          case 'driver':
-            Navigator.pushReplacementNamed(context, '/driver');
-            break;
-          default:
-            Navigator.pushReplacementNamed(context, '/main');
-        }
-      }
-    } else {
-      Navigator.pushReplacementNamed(context, '/welcome');
-    }
-  }
+  // --- WIDGET DIALOG UNTUK UMPAN BALIK PENGGUNA ---
 
   void _showLocationBlockedDialog() {
     showDialog(
@@ -109,20 +143,13 @@ class _StartupViewState extends State<StartupView> {
               Text("Wilayah Tidak Didukung"),
             ],
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: const [
-              Text(
-                "Aplikasi ini hanya dapat digunakan oleh pengguna yang berada di dalam wilayah operasional.",
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 16),
-              Icon(Icons.map_outlined, size: 48, color: Colors.grey),
-            ],
+          content: const Text(
+            "Mohon maaf, aplikasi ini hanya dapat digunakan di dalam wilayah operasional kami.",
+            textAlign: TextAlign.center,
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => exit(0), 
               child: const Text("Keluar"),
             ),
           ],
@@ -134,13 +161,21 @@ class _StartupViewState extends State<StartupView> {
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text("Kesalahan Lokasi"),
+        title: const Text("Terjadi Kesalahan"),
         content: Text(message),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("OK"),
+            onPressed: () {
+              Navigator.pop(context);
+              _initializeAndNavigate();
+            },
+            child: const Text("Coba Lagi"),
+          ),
+          TextButton(
+            onPressed: () => exit(0),
+            child: const Text("Keluar"),
           ),
         ],
       ),
@@ -149,8 +184,7 @@ class _StartupViewState extends State<StartupView> {
 
   @override
   Widget build(BuildContext context) {
-    var media = MediaQuery.of(context).size;
-
+    // Selama proses inisialisasi, tampilkan splash screen.
     return WillPopScope(
       onWillPop: () async => false,
       child: Scaffold(
@@ -159,14 +193,13 @@ class _StartupViewState extends State<StartupView> {
           children: [
             Image.asset(
               "assets/img/splash_bg.png",
-              width: media.width,
-              height: media.height,
+              width: MediaQuery.of(context).size.width,
+              height: MediaQuery.of(context).size.height,
               fit: BoxFit.cover,
             ),
             Image.asset(
               "assets/img/app_logo.png",
-              width: media.width * 0.55,
-              height: media.width * 0.55,
+              width: MediaQuery.of(context).size.width * 0.55,
               fit: BoxFit.contain,
             ),
           ],

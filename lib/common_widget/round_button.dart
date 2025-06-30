@@ -4,7 +4,7 @@ import 'package:kons2/common/color_extension.dart';
 
 enum RoundButtonType{ bgPrimary, textPrimary }
 class RoundButton extends StatelessWidget {
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final String title;
   final RoundButtonType type;
   final double fontSize;

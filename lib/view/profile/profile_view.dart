@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:kons2/cofing.dart';
 import 'package:provider/provider.dart';
 import 'package:kons2/common/color_extension.dart';
 import 'package:kons2/common_widget/round_button.dart';
@@ -208,15 +207,9 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   Widget _buildProfileImage(String? photoUrl) {
-  final authProvider = Provider.of<AuthProvider>(context);
-  // Pastikan baseUrl dapat diakses, misalnya dari AuthProvider.apiService.baseUrl
-  final String backendBaseUrl = baseUrl; 
 
-  String? fullImageUrl;
-  if (photoUrl != null && photoUrl.isNotEmpty) {
-    // Sesuaikan path '/storage/' jika di backend Anda berbeda
-    fullImageUrl = '$backendBaseUrl/storage/photos/$photoUrl'; 
-  }
+
+
 
   return Container(
     width: 100,
@@ -233,15 +226,15 @@ class _ProfileViewState extends State<ProfileView> {
               fit: BoxFit.cover, // <-- Pastikan ini
             ),
           )
-        : fullImageUrl != null && fullImageUrl.isNotEmpty 
+        : photoUrl != null && photoUrl.isNotEmpty 
             ? ClipRRect(
                 borderRadius: BorderRadius.circular(50),
                 child: Image.network(
-                  fullImageUrl,
+                  photoUrl,
                   fit: BoxFit.cover, // <-- Pastikan ini
                   errorBuilder: (context, error, stackTrace) {
                     print('Error loading image from network: $error');
-                    print('Image URL attempted: $fullImageUrl');
+                    print('Image URL attempted: $photoUrl');
                     return Icon(Icons.error, size: 65, color: Colors.red);
                   },
                 ),

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:kons2/providers/customer_order_provider.dart';
 import 'package:kons2/providers/items_provider.dart';
+import 'package:kons2/providers/order_provider.dart';
 import 'package:kons2/view/home/home_view.dart';
 import 'package:kons2/view/more/pick_location_view.dart';
 import 'package:kons2/view/owner_restaurant/orderList/resto_order_list_view.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kons2/services/api_services.dart';
+import 'package:kons2/services/storage_services.dart'; // Import service baru
 
 import 'package:kons2/providers/auth_provider.dart';
 import 'package:kons2/providers/tab_provider.dart';
@@ -35,16 +38,20 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        Provider<StorageService>(create: (_) => StorageService()),
         Provider<ApiService>(create: (_) => ApiService()),
         ChangeNotifierProvider<AuthProvider>(
           create: (context) => AuthProvider(
-            Provider.of<ApiService>(context, listen: false),
-          )..init(),
+            context.read<ApiService>(),
+            context.read<StorageService>(),
+          )..init(), // Panggil init untuk memuat sesi
         ),
         ChangeNotifierProvider(create: (_) => TabProvider()),
         ChangeNotifierProvider(create: (_) => HomeProvider()),
         ChangeNotifierProvider(create: (_) => CategoryItemsProvider()),
         ChangeNotifierProvider(create: (_) => ItemProvider()),
+        ChangeNotifierProvider(create: (_) => CustomerOrderProvider(ApiService()),),
+        ChangeNotifierProvider(create: (_) => OrderProvider(ApiService())),
         ChangeNotifierProvider(
           create: (context) => ItemsProvider(
             Provider.of<ApiService>(context, listen: false),
@@ -64,12 +71,13 @@ class MyApp extends StatelessWidget {
   final bool isLoggedIn;
   final bool isOnboardingCompleted;
 
-  const MyApp({super.key, required this.isLoggedIn, required this.isOnboardingCompleted});
+  const MyApp(
+      {super.key,
+      required this.isLoggedIn,
+      required this.isOnboardingCompleted});
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Food Delivery',
@@ -77,9 +85,9 @@ class MyApp extends StatelessWidget {
         fontFamily: "Metropolis",
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: _resolveInitialView(authProvider),
+      home: const StartupView(),
       routes: {
-        '/main': (context) => const MainTabview(),
+        '/main': (context) => const MainTabView(),
         '/login': (context) => const LoginView(),
         '/signup': (context) => const SignUpView(),
         '/welcome': (context) => const WelcomeView(),
@@ -94,16 +102,5 @@ class MyApp extends StatelessWidget {
         '/restoTransactions': (context) => RestoOrderListView(),
       },
     );
-  }
-
-  Widget _resolveInitialView(AuthProvider auth) {
-    if (isLoggedIn) {
-      if (auth.user?.role == 'admin') return const AdminView();
-      if (auth.user?.role == 'restaurant_owner') return const RestaurantOwnerHomeView();
-      if (auth.user?.role == 'driver') return const DriverView();
-      return isOnboardingCompleted ? const MainTabview() : const OnBoardingView();
-    } else {
-      return const StartupView();
-    }
   }
 }

@@ -106,7 +106,7 @@ class _ItemDetailsViewState extends State<ItemDetailsView> {
         alignment: Alignment.topCenter,
         children: [
           Image.network(
-            item.imageUrl,
+            item.image,
             width: media.width,
             height: media.width,
             fit: BoxFit.cover,

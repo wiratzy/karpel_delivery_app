@@ -28,7 +28,9 @@ class Restaurant {
         name: json['name'] ?? '',
         image: json['image'] ?? '',
         rate: _parseRate(json['rate']),
-        rating: json['rating'] ?? 0,
+        rating: json['rating'] is int
+            ? json['rating']
+            : int.tryParse(json['rating']?.toString() ?? '0') ?? 0,
         type: json['type'] ?? '',
         foodType: json['food_type'],
         location: json['location'],
@@ -54,6 +56,7 @@ class Restaurant {
     return 0.0;
   }
 }
+
 class Item {
   final int id;
   final String name;
@@ -64,8 +67,7 @@ class Item {
   final String type;
   final String? price;
   final int? itemCategoryId;
-  final int restaurantId;
-
+  final int? restaurantId;
 
   Item({
     required this.id,
@@ -77,22 +79,26 @@ class Item {
     required this.type,
     required this.price,
     this.itemCategoryId,
-    required this.restaurantId,
+    this.restaurantId,
   });
 
-  factory Item.fromJson(Map<String, dynamic> json) => Item(
-        id: json['id'] ?? 0,
-        name: json['name'] ?? '',
-        image: json['image'] ?? '',
-        rate: json['rate']?.toString() ?? '0.0',
-        rating: json['rating'] ?? 0,
-        type: json['type'] ?? '',
-        price: json['price']?.toString(),
-        itemCategoryId: json['item_category_id'] ?? 0,
-        restaurantId: json['restaurant_id'] ?? 0,
-        restaurant: Restaurant.fromJson(json['restaurant'] ?? {}),
-      );
+  factory Item.fromJson(Map<String, dynamic> json) {
+      print("DEBUG restaurant_id value: ${json['restaurant_id']}");
 
+    return Item(
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
+      image: json['image'] ?? '',
+      rate: json['rate']?.toString() ?? '0.0',
+      rating: json['rating'] ?? 0,
+      type: json['type'] ?? '',
+      price: json['price']?.toString(),
+      itemCategoryId: json['item_category_id'] ?? 0,
+         restaurantId: json['restaurant_id'] ??
+        (json['restaurant'] != null ? json['restaurant']['id'] : null), // <- FIX DISINI
+      restaurant: Restaurant.fromJson(json['restaurant'] ?? {}),
+    );
+  }
   Map<String, dynamic> toJson() => {
         'id': id,
         'name': name,
@@ -107,12 +113,12 @@ class Item {
 
   String get imageUrl => '$baseUrl$image';
 }
+
 class ItemCategory {
   final int id;
   final String name;
   final String image;
   final int itemsCount;
-
 
   ItemCategory({
     required this.id,

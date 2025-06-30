@@ -1,8 +1,12 @@
+import 'dart:convert';
 import 'package:kons2/models/user_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 
+/// Service ini bertanggung jawab untuk semua operasi baca/tulis
+/// ke penyimpanan lokal perangkat (SharedPreferences).
 class StorageService {
+
+  // --- Token ---
   Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('token', token);
@@ -13,18 +17,10 @@ class StorageService {
     return prefs.getString('token');
   }
 
-  Future<void> removeToken() async {
+  // --- User ---
+  Future<void> saveUser(User user) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('token');
-  }
-
-  Future<void> saveUser(User? user) async {
-    final prefs = await SharedPreferences.getInstance();
-    if (user != null) {
-      await prefs.setString('user', jsonEncode(user.toJson()));
-    } else {
-      await prefs.remove('user');
-    }
+    await prefs.setString('user', jsonEncode(user.toJson()));
   }
 
   Future<User?> getUser() async {
@@ -36,8 +32,24 @@ class StorageService {
     return null;
   }
 
-  Future<void> removeUser() async {
+  // --- Onboarding ---
+  Future<void> saveOnboardingStatus(bool isCompleted) async {
     final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isOnboardingCompleted', isCompleted);
+  }
+
+  Future<bool> getOnboardingStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    // Default ke false jika belum pernah ada
+    return prefs.getBool('isOnboardingCompleted') ?? false;
+  }
+
+  // --- Operasi Gabungan (Cleanup) ---
+
+  /// Menghapus token dan data user, biasanya untuk logout.
+  Future<void> removeTokenAndUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
     await prefs.remove('user');
   }
 }

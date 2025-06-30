@@ -18,37 +18,26 @@ class _SignUpViewState extends State<SignUpView> {
   final TextEditingController txtEmail = TextEditingController();
   final TextEditingController txtPassword = TextEditingController();
   final TextEditingController txtConfirmPassword = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
 
   String? _selectedAddress;
   double? _latitude;
   double? _longitude;
 
   Future<void> _handleRegister() async {
-    final auth = Provider.of<AuthProvider>(context, listen: false);
-
-    if (txtName.text.isEmpty ||
-        _selectedAddress == null ||
-        _latitude == null ||
-        _longitude == null ||
-        txtPhone.text.isEmpty ||
-        txtEmail.text.isEmpty ||
-        txtPassword.text.isEmpty ||
-        txtConfirmPassword.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Semua field harus diisi")),
-      );
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      if (_selectedAddress == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Harap pilih lokasi Anda di peta")),
+        );
+      }
       return;
     }
 
-    if (txtPassword.text != txtConfirmPassword.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Password tidak cocok")),
-      );
-      return;
-    }
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     try {
-      await auth.register(
+      await authProvider.register(
         name: txtName.text,
         address: _selectedAddress!,
         latitude: _latitude!,
@@ -56,12 +45,20 @@ class _SignUpViewState extends State<SignUpView> {
         phone: txtPhone.text,
         email: txtEmail.text,
         password: txtPassword.text,
-        autoLogin: true,
-        context: context,
       );
-    } catch (e) {
+
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Register gagal: $e")),
+        const SnackBar(content: Text("Registrasi berhasil!")),
+      );
+      
+      Navigator.pushReplacementNamed(context, '/onBoarding');
+
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Registrasi Gagal: $e")),
       );
     }
   }
@@ -79,30 +76,11 @@ class _SignUpViewState extends State<SignUpView> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        return await showDialog<bool>(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: const Text('Konfirmasi'),
-                content: const Text('Apakah Anda yakin ingin keluar dari aplikasi?'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: const Text('Tidak'),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    child: const Text('Ya'),
-                  ),
-                ],
-              ),
-            ) ??
-            false;
-      },
-      child: Scaffold(
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 25),
+    return Scaffold(
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 25),
+        child: Form(
+          key: _formKey,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
@@ -128,6 +106,7 @@ class _SignUpViewState extends State<SignUpView> {
                 hintText: "Name",
                 controller: txtName,
                 keyboardType: TextInputType.name,
+                validator: (v) => v!.isEmpty ? "Nama tidak boleh kosong" : null,
               ),
               const SizedBox(height: 25),
               GestureDetector(
@@ -137,6 +116,11 @@ class _SignUpViewState extends State<SignUpView> {
                   decoration: BoxDecoration(
                     color: Tcolor.textfield,
                     borderRadius: BorderRadius.circular(25),
+                    border: Border.all(
+                      color: (_formKey.currentState?.validate() == false && _selectedAddress == null) 
+                             ? Colors.red 
+                             : Colors.transparent,
+                    )
                   ),
                   child: Row(
                     children: [
@@ -144,13 +128,14 @@ class _SignUpViewState extends State<SignUpView> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          _selectedAddress ?? "Pilih Lokasi di Maps",
+                          _selectedAddress ?? "Pilih Lokasi di Peta",
                           style: TextStyle(
                             color: _selectedAddress == null
                                 ? Tcolor.placeholder
                                 : Tcolor.primaryText,
                             fontSize: 14,
                           ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -162,41 +147,66 @@ class _SignUpViewState extends State<SignUpView> {
                 hintText: "Phone",
                 controller: txtPhone,
                 keyboardType: TextInputType.phone,
+                validator: (v) => v!.isEmpty ? "Nomor telepon tidak boleh kosong" : null,
               ),
               const SizedBox(height: 25),
               RoundTextfield(
                 hintText: "Email",
                 controller: txtEmail,
                 keyboardType: TextInputType.emailAddress,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Email tidak boleh kosong';
+                  }
+                  if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                    return 'Masukkan format email yang valid';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 25),
               RoundTextfield(
                 hintText: "Password",
                 controller: txtPassword,
                 obscureText: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Password tidak boleh kosong';
+                  }
+                  if (value.length < 6) {
+                    return 'Password minimal 6 karakter';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 25),
               RoundTextfield(
                 hintText: "Confirm Password",
                 controller: txtConfirmPassword,
                 obscureText: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Konfirmasi password tidak boleh kosong';
+                  }
+                  if (value != txtPassword.text) {
+                    return 'Password tidak cocok';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 25),
               Consumer<AuthProvider>(
-                builder: (context, auth, _) => IgnorePointer(
-                  ignoring: auth.isLoading,
-                  child: Opacity(
-                    opacity: auth.isLoading ? 0.5 : 1.0,
-                    child: RoundButton(
-                      title: auth.isLoading ? "Loading..." : "Sign Up",
-                      onPressed: _handleRegister,
-                    ),
-                  ),
+                builder: (context, auth, _) => RoundButton(
+                  title: auth.isLoading ? "Loading..." : "Sign Up",
+                  // PERBAIKAN DI SINI
+                  onPressed: auth.isLoading ? null : () {
+                    _handleRegister();
+                  },
                 ),
               ),
               const SizedBox(height: 8),
               TextButton(
-                onPressed: () => Navigator.pushNamed(context, '/login'),
+                onPressed: () => Navigator.pop(context),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -209,7 +219,7 @@ class _SignUpViewState extends State<SignUpView> {
                       ),
                     ),
                     Text(
-                      "Sign In",
+                      "Login",
                       style: TextStyle(
                         color: Tcolor.primary,
                         fontSize: 14,

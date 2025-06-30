@@ -1,7 +1,7 @@
 import 'package:intl/intl.dart';
 
 // final String baseUrl = "http://192.168.239.220:8000";
-  // final  String baseUrl = 'http://10.0.2.2:8000';
+  // final  String baseUrl = 'http://10.0.162.47:8000';
   final  String baseUrl = 'http://192.168.100.54:8000';
 
 String formatPrice(String? rawPrice) {

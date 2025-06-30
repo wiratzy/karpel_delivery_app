@@ -3,7 +3,6 @@ import 'package:kons2/common/color_extension.dart';
 import 'package:kons2/common_widget/round_button.dart';
 import 'package:kons2/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class OnBoardingView extends StatefulWidget {
   const OnBoardingView({super.key});
@@ -50,16 +49,28 @@ class _OnBoardingViewState extends State<OnBoardingView> {
     super.dispose();
   }
 
-  Future<void> _completeOnboarding(BuildContext context) async {
+  /// **FUNGSI YANG SUDAH DIPERBAIKI**
+  /// Fungsi ini sekarang hanya berinteraksi dengan AuthProvider.
+  Future<void> _completeOnboarding() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('isOnboardingCompleted', true);
+      // 1. Dapatkan instance AuthProvider
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      authProvider.setOnboardingCompleted(true);
+
+      // 2. Panggil fungsi yang benar dari provider.
+      // Fungsi ini akan mengurus update state dan penyimpanan ke storage.
+      await authProvider.completeOnboarding();
+
+      // 3. Pastikan widget masih ada sebelum navigasi (best practice)
+      if (!mounted) return;
+
+      // 4. Arahkan pengguna ke halaman utama
       Navigator.pushReplacementNamed(context, '/main');
+
     } catch (e) {
+      // Jika terjadi error, tampilkan pesan
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal menyimpan status onboarding: $e')),
+        SnackBar(content: Text('Gagal menyelesaikan onboarding: $e')),
       );
     }
   }
@@ -147,20 +158,18 @@ class _OnBoardingViewState extends State<OnBoardingView> {
                     const SizedBox(height: 20),
                     RoundButton(
                       title: selectPage == pageArr.length - 1
-                          ? "Get Started"
-                          : "Next",
-                      onPressed: () async {
+                          ? "Mulai Sekarang"
+                          : "Selanjutnya",
+                      onPressed: () {
                         if (selectPage == pageArr.length - 1) {
-                          await _completeOnboarding(context);
+                          // Panggil fungsi yang sudah diperbaiki
+                          _completeOnboarding();
                         } else {
-                          setState(() {
-                            selectPage = selectPage + 1;
-                            controller.animateToPage(
-                              selectPage,
-                              duration: const Duration(milliseconds: 500),
-                              curve: Curves.easeInOut,
-                            );
-                          });
+                          // Logika untuk pindah ke halaman selanjutnya
+                          controller.nextPage(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                          );
                         }
                       },
                     ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:kons2/common/color_extension.dart';
 import 'package:kons2/view/more/inbox_view.dart';
 import 'package:kons2/view/more/my_order_view.dart';
+import 'package:kons2/view/more/my_orders_view.dart';
 import 'package:kons2/view/more/notifications_view.dart';
 import 'package:kons2/view/more/payment_details_view.dart';
 
@@ -117,7 +118,7 @@ class _MoreViewState extends State<MoreView> {
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) =>
-                                        const MyOrderView()));
+                                        const MyOrdersView()));
                          
                           case "3":
                             Navigator.push(

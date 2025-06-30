@@ -1,12 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:kons2/models/home_model.dart';
+import 'package:kons2/models/order_model.dart';
 import 'package:kons2/models/user_model.dart';
 
 class ApiService {
   // static const String baseUrl = 'http://192.168.239.220:8000/api';
-  // static const String baseUrl = 'http://10.0.2.2:8000/api';
+  // static const String baseUrl = 'http://10.0.162.47:8000/api';
   static const String baseUrl = 'http://192.168.100.54:8000/api';
 
   Future<Map<String, dynamic>> login(String email, String password) async {
@@ -483,4 +485,141 @@ class ApiService {
       throw Exception('Gagal memuat item: ${response.body}');
     }
   }
+
+  Future<List<dynamic>> getRestoOrders(String token) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/get-orders'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+
+      print('Response body: ${response.body}');
+
+      if (data['success'] == true && data['orders'] != null) {
+        return data['orders'] as List<dynamic>;
+      } else {
+        // Tetap kembalikan List kosong agar tidak error
+        return [];
+      }
+    } else {
+      throw Exception('Terjadi kesalahan server (${response.statusCode})');
+    }
+  }
+
+  Future<Map<String, dynamic>> getOrderById(String token, int orderId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/restaurants/orders/$orderId'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      },
+    );
+
+    debugPrint('🧾 Response body: ${response.body}');
+    debugPrint('📦 Status: ${response.statusCode}');
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body)['order'];
+      if (data == null) {
+        throw Exception('Respons tidak berisi data');
+      }
+      return data;
+    } else {
+      throw Exception('Gagal mengambil detail pesanan');
+    }
+  }
+
+  // PUT /orders/{id}/status
+  Future<void> updateOrderStatus(
+      String token, int orderId, String newStatus) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/restaurants/orders/$orderId/status'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({'status': newStatus}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Gagal mengubah status');
+    }
+  }
+
+  Future<Map<String, dynamic>> checkout(String token, Map<String, dynamic> data) async {
+  final response = await http.post(
+    Uri.parse('$baseUrl/checkout'),
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: jsonEncode(data),
+  );
+
+  if (response.statusCode == 201) {
+    return jsonDecode(response.body); // sukses, return responsenya
+  } else {
+    throw Exception('Gagal melakukan checkout: ${response.body}');
+  }
+}
+
+Future<List<dynamic>> getMyOrders(String token) async {
+  final response = await http.get(
+    Uri.parse('$baseUrl/user/my-orders'),
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Accept': 'application/json',
+    },
+  );
+
+  if (response.statusCode == 200) {
+    final body = jsonDecode(response.body);
+    print("📦 getMyOrders: ${body['data']}");
+    return body['data']; // HANYA KEMBALIKAN DATA-NYA
+  } else {
+    throw Exception('Gagal mengambil daftar pesanan: ${response.statusCode}');
+  }
+}
+
+
+
+Future<Map<String, dynamic>> getCustomerOrderById(String token, int id) async {
+  final response = await http.get(
+    Uri.parse('$baseUrl/user/orders/$id'),
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Accept': 'application/json',
+    },
+  );
+
+  if (response.statusCode == 200) {
+    final body = jsonDecode(response.body);
+    return body['data']; // Kembalikan data pesanan
+  } else {
+    throw Exception('Gagal mengambil detail pesanan: ${response.statusCode}');
+  }
+}
+Future<void> updateCustomerOrderStatus(String token, int orderId, String status) async {
+  final url = Uri.parse('$baseUrl/user/orders/$orderId/status');
+  final response = await http.put(
+    url,
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    },
+    body: jsonEncode({'status': status}),
+  );
+
+  if (response.statusCode != 200) {
+    throw Exception('Gagal update status');
+  }
+}
+
+
 }

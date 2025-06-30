@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+// common_widget/round_textfield.dart
 
-import '../common/color_extension.dart';
+import 'package:flutter/material.dart';
+import 'package:kons2/common/color_extension.dart';
 
 class RoundTextfield extends StatelessWidget {
   final TextEditingController? controller;
@@ -11,6 +12,7 @@ class RoundTextfield extends StatelessWidget {
 
   final Widget? left;
     final FocusNode? focusNode; // <--- Tambahkan ini
+  final String? Function(String?)? validator;
 
 
   const RoundTextfield(
@@ -21,42 +23,42 @@ class RoundTextfield extends StatelessWidget {
       this.bgColor, 
       this.left,
        this.focusNode,
-      this.obscureText = false});
+      this.obscureText = false,
+      this.validator});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-          color: bgColor ?? Tcolor.textfield,
-          borderRadius: BorderRadius.circular(25)),
-      child: Row(
-        children: [
-          if (left != null)
-            Padding(
-              padding: const EdgeInsets.only(
-                left: 15,
-              ),
-              child: left!,
-            ),
-          Expanded(
-            child: TextField(
-              autocorrect: false,
-              controller: controller,
-              obscureText: obscureText,
-              keyboardType: keyboardType,
-              decoration: InputDecoration(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 20),
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                hintText: hintText,
-                hintStyle: TextStyle(
-                    color: Tcolor.placeholder,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500),
-              ),
-            ),
-          ),
-        ],
+    // GANTI TextField MENJADI TextFormField
+    return TextFormField(
+      controller: controller,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      // TAMBAHKAN INI: Gunakan validator yang diberikan
+      validator: validator,
+      autovalidateMode: AutovalidateMode.onUserInteraction, // Validasi saat pengguna mengetik
+      decoration: InputDecoration(
+        contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 25),
+        filled: true,
+        fillColor: bgColor ?? Tcolor.textfield,
+        hintText: hintText,
+        hintStyle: TextStyle(
+          color: Tcolor.placeholder,
+          fontSize: 14,
+          fontWeight: FontWeight.w500,
+        ),
+        prefixIcon: left,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(25.0),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(25.0),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(25.0),
+          borderSide: BorderSide.none,
+        ),
       ),
     );
   }
