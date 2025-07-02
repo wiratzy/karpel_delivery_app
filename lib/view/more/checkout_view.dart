@@ -308,9 +308,11 @@ class _CheckoutViewState extends State<CheckoutView> {
                                 "Pesanan berhasil dibuat! ID: ${result['order_id']}")),
                       );
 
-                      Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(builder: (_) =>  CustomerDetailView(orderId: result['order_id'],)),
-                        (route) => false,
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              CustomerDetailView(orderId: result['order_id']),
+                        ),
                       );
                     } catch (e) {
                       ScaffoldMessenger.of(context).showSnackBar(

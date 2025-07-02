@@ -38,13 +38,10 @@ class User {
                   ? '$baseUrl/storage/photos/${json['photo']}'
                   : null,
       role: json['role'] ?? '',
-     latitude: double.tryParse(
-  (json['latitude'] ?? json['address_latitude'])?.toString() ?? ''
-),
-longitude: double.tryParse(
-  (json['longitude'] ?? json['address_longitude'])?.toString() ?? ''
-),
-
+      latitude: double.tryParse(
+          (json['latitude'] ?? json['address_latitude'])?.toString() ?? ''),
+      longitude: double.tryParse(
+          (json['longitude'] ?? json['address_longitude'])?.toString() ?? ''),
     );
   }
 
@@ -59,8 +56,8 @@ longitude: double.tryParse(
       'address': address,
       'photo': photo,
       'role': role,
-      'latitude' : latitude,
-      'longitude' : longitude
+      'latitude': latitude,
+      'longitude': longitude
     };
   }
 }

@@ -63,8 +63,10 @@ class _MyOrdersViewState extends State<MyOrdersView> {
   }
 
   Widget _buildOrderCard(Order order) {
-    final String dateFormat =
-        DateFormat('dd MMM yyyy, HH:mm').format(order.createdAt);
+    DateTime jakartaTime = order.createdAt.toLocal();
+    String formattedDate =
+        DateFormat('dd MMMM yyyy, HH:mm', 'id_ID').format(jakartaTime);
+
     final statusColor = _statusColor(order.status);
     final itemPreview = order.items.isNotEmpty ? order.items.first.item : null;
 
@@ -138,7 +140,7 @@ class _MyOrdersViewState extends State<MyOrdersView> {
                 style: const TextStyle(fontWeight: FontWeight.w500)),
 
             Text(
-              "Tanggal: $dateFormat",
+              "Tanggal: $formattedDate",
               style: const TextStyle(color: Colors.grey),
             ),
           ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:kons2/providers/customer_order_provider.dart';
+import 'package:kons2/providers/driver_provider.dart';
 import 'package:kons2/providers/items_provider.dart';
 import 'package:kons2/providers/order_provider.dart';
 import 'package:kons2/view/home/home_view.dart';
@@ -9,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:kons2/services/api_services.dart';
 import 'package:kons2/services/storage_services.dart'; // Import service baru
+import 'package:intl/date_symbol_data_local.dart'; // <-- 1. Import package ini
 
 import 'package:kons2/providers/auth_provider.dart';
 import 'package:kons2/providers/tab_provider.dart';
@@ -30,6 +32,8 @@ import 'package:kons2/view/on_boarding/on_boarding_view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('id_ID', null); // <-- 4. Tambahkan inisialisasi untuk 'id_ID'
+
   final prefs = await SharedPreferences.getInstance();
 
   final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
@@ -58,6 +62,8 @@ void main() async {
             Provider.of<AuthProvider>(context, listen: false),
           ),
         ),
+                ChangeNotifierProvider(create: (_) => DriverProvider(ApiService())), // <-- INI WAJIB ADA
+
       ],
       child: MyApp(
         isLoggedIn: isLoggedIn,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:kons2/models/order_model.dart';
 import 'package:kons2/models/order_request_model.dart';
+import 'package:kons2/models/user_model.dart';
 import 'package:kons2/services/api_services.dart';
 
 class OrderProvider extends ChangeNotifier {
@@ -62,4 +63,13 @@ class OrderProvider extends ChangeNotifier {
       throw Exception("Gagal checkout: $e");
     }
   }
+
+//   Future<List<User>> fetchAvailableDrivers(String token) async {
+//   final response = await _apiService.getAvailableDrivers(token); // Buat di ApiService juga
+//   return (response['drivers'] as List).map((e) => User.fromJson(e)).toList();
+// }
+
+
+
+
 }

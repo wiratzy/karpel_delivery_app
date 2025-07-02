@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:kons2/models/driver_model.dart';
 import 'package:kons2/models/home_model.dart';
 import 'package:kons2/models/order_model.dart';
 import 'package:kons2/models/user_model.dart';
@@ -9,7 +10,7 @@ import 'package:kons2/models/user_model.dart';
 class ApiService {
   // static const String baseUrl = 'http://192.168.239.220:8000/api';
   // static const String baseUrl = 'http://10.0.162.47:8000/api';
-  static const String baseUrl = 'http://192.168.100.54:8000/api';
+  static const String baseUrl = 'http://202.155.132.96/api';
 
   Future<Map<String, dynamic>> login(String email, String password) async {
     final response = await http.post(
@@ -618,6 +619,54 @@ Future<void> updateCustomerOrderStatus(String token, int orderId, String status)
 
   if (response.statusCode != 200) {
     throw Exception('Gagal update status');
+  }
+}
+
+// services/api_service.dart
+Future<void> assignDriverToOrder({
+  required int orderId,
+  required int driverId,
+  required String token,
+}) async {
+  final response = await http.post(
+    Uri.parse('$baseUrl/restaurants/orders/$orderId/assign-driver'),
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
+    body: jsonEncode({
+      'driver_id': driverId,
+    }),
+  );
+
+  print('Assign Driver Response: ${response.statusCode}');
+  print('Body: ${response.body}');
+
+  if (response.statusCode != 200) {
+    throw Exception('Gagal assign driver: ${response.body}');
+  }
+}
+
+ Future<List<Driver>> getAvailableDrivers(String token) async {
+  final response = await http.get(
+    Uri.parse('$baseUrl/restaurants/drivers'),
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Accept': 'application/json',
+    },
+  );
+
+  print('Response Status: ${response.statusCode}');
+  print('Response Body: ${response.body}');
+
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    return (data['data'] as List)
+        .map((driver) => Driver.fromJson(driver))
+        .toList();
+  } else {
+    throw Exception('Gagal mengambil daftar driver: ${response.statusCode}');
   }
 }
 

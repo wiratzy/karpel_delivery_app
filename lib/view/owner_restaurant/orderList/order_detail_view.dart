@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:kons2/providers/driver_provider.dart';
+import 'package:kons2/view/more/choose_driver_modal.dart';
 import 'package:provider/provider.dart';
 import 'package:kons2/common/color_extension.dart';
 import 'package:kons2/models/order_model.dart';
@@ -136,8 +138,22 @@ class _OrderDetailViewState extends State<OrderDetailView> {
                   else if (_order!.status == 'diproses')
                     Center(
                       child: ElevatedButton.icon(
-                        onPressed:
-                            _isLoading ? null : () => _updateStatus('diantar'),
+                        onPressed: () async {
+                          await showChooseDriverModal(context, (driver) async {
+                            // Panggil API assignDriver ke backend pakai ID driver yang dipilih
+                            final driverProvider = Provider.of<DriverProvider>(
+                                context,
+                                listen: false);
+                            await driverProvider.assignDriver(
+                              context.read<AuthProvider>().token!, // token
+                              widget.orderId, // orderId
+                              driver.id, // driverId
+                            );
+
+                            // Setelah berhasil, update status ke "diantar"
+                            await _updateStatus('diantar');
+                          });
+                        },
                         icon: const Icon(Icons.delivery_dining),
                         label: const Text('Tandai Diantar'),
                         style: ElevatedButton.styleFrom(
