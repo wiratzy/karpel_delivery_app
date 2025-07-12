@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:kons2/common/color_extension.dart';
-import 'package:kons2/common_widget/round_button.dart';
-import 'package:kons2/common_widget/round_textfield.dart';
+import 'package:karpel_food_delivery/common/color_extension.dart';
+import 'package:karpel_food_delivery/common_widget/round_button.dart';
+import 'package:karpel_food_delivery/common_widget/round_textfield.dart';
 
 class NewPasswordView extends StatefulWidget {
   const NewPasswordView({super.key});

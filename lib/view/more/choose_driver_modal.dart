@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:kons2/models/driver_model.dart';
-import 'package:kons2/providers/auth_provider.dart';
-import 'package:kons2/providers/driver_provider.dart';
+import 'package:karpel_food_delivery/models/driver_model.dart';
+import 'package:karpel_food_delivery/providers/auth_provider.dart';
+import 'package:karpel_food_delivery/providers/driver_provider.dart';
 import 'package:provider/provider.dart';
 
 // FUNGSI UTAMA (SEKARANG JAUH LEBIH SEDERHANA)

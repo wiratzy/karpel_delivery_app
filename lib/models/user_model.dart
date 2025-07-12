@@ -1,4 +1,4 @@
-import 'package:kons2/cofing.dart';
+import 'package:karpel_food_delivery/cofing.dart';
 
 class User {
   final int id;
@@ -10,40 +10,45 @@ class User {
   final String role;
   final double? latitude;
   final double? longitude;
+  final int? restaurantId;
 
-  User({
-    required this.id,
-    required this.name,
-    required this.email,
-    required this.phone,
-    required this.address,
-    this.photo,
-    required this.role,
-    required this.latitude,
-    required this.longitude,
-  });
+  User(
+      {required this.id,
+      required this.name,
+      required this.email,
+      required this.phone,
+      required this.address,
+      this.photo,
+      required this.role,
+      required this.latitude,
+      required this.longitude,
+      this.restaurantId});
 
   /// Factory constructor yang sudah diperbaiki untuk menangani parsing dengan aman.
   factory User.fromJson(Map<String, dynamic> json) {
-    return User(
-      id: int.tryParse(json['id'].toString()) ?? 0,
-      name: json['name'] ?? '',
-      email: json['email'] ?? '',
-      phone: json['phone'] ?? '',
-      address: json['address'] ?? '',
-      photo:
-          json['photo'] != null && json['photo'].toString().startsWith('http')
-              ? json['photo']
-              : json['photo'] != null
-                  ? '$baseUrl/storage/photos/${json['photo']}'
-                  : null,
-      role: json['role'] ?? '',
-      latitude: double.tryParse(
-          (json['latitude'] ?? json['address_latitude'])?.toString() ?? ''),
-      longitude: double.tryParse(
-          (json['longitude'] ?? json['address_longitude'])?.toString() ?? ''),
-    );
-  }
+  return User(
+    id: int.tryParse(json['id'].toString()) ?? 0,
+    name: json['name'] ?? '',
+    email: json['email'] ?? '',
+    phone: json['phone'] ?? '',
+    address: json['address'] ?? '',
+    photo: json['photo'] != null && json['photo'].toString().startsWith('http')
+        ? json['photo']
+        : json['photo'] != null
+            ? '$baseUrl/storage/photos/${json['photo']}'
+            : null,
+    role: json['role'] ?? '',
+    latitude: double.tryParse(
+        (json['latitude'] ?? json['address_latitude'])?.toString() ?? ''),
+    longitude: double.tryParse(
+        (json['longitude'] ?? json['address_longitude'])?.toString() ?? ''),
+    restaurantId: json['restaurant_id'] is int
+        ? json['restaurant_id']
+        : int.tryParse(json['restaurant_id'].toString()),
+  );
+}
+
+
 
   /// Fungsi toJson yang sudah diperbaiki dengan menyertakan 'id'.
   Map<String, dynamic> toJson() {
@@ -57,7 +62,8 @@ class User {
       'photo': photo,
       'role': role,
       'latitude': latitude,
-      'longitude': longitude
+      'longitude': longitude,
+      'restaurant_id': restaurantId
     };
   }
 }

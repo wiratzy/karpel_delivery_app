@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:kons2/models/user_model.dart';
+import 'package:karpel_food_delivery/models/user_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Service ini bertanggung jawab untuk semua operasi baca/tulis

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:kons2/providers/auth_provider.dart';
-import 'package:kons2/providers/category_items_provider.dart';
-import 'package:kons2/view/menu/menu_items_view.dart';
-import 'package:kons2/view/more/my_order_view.dart';
+import 'package:karpel_food_delivery/providers/auth_provider.dart';
+import 'package:karpel_food_delivery/providers/category_items_provider.dart';
+import 'package:karpel_food_delivery/view/menu/menu_items_view.dart';
+import 'package:karpel_food_delivery/view/more/my_order_view.dart';
 import 'package:provider/provider.dart';
 
 import '../../common/color_extension.dart';

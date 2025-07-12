@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:kons2/common/color_extension.dart';
-import 'package:kons2/common_widget/round_button.dart';
-import 'package:kons2/models/order_request_model.dart';
-import 'package:kons2/providers/item_provider.dart';
-import 'package:kons2/providers/order_provider.dart';
-import 'package:kons2/providers/auth_provider.dart';
-import 'package:kons2/view/more/customer_detail_view.dart';
-import 'package:kons2/view/more/my_order_view.dart';
-import 'package:kons2/view/more/my_orders_view.dart';
-import 'package:kons2/view/more/pick_location_view.dart';
+import 'package:karpel_food_delivery/common/color_extension.dart';
+import 'package:karpel_food_delivery/common_widget/round_button.dart';
+import 'package:karpel_food_delivery/models/order_request_model.dart';
+import 'package:karpel_food_delivery/providers/item_provider.dart';
+import 'package:karpel_food_delivery/providers/order_provider.dart';
+import 'package:karpel_food_delivery/providers/auth_provider.dart';
+import 'package:karpel_food_delivery/view/more/customer_detail_view.dart';
+import 'package:karpel_food_delivery/view/more/my_order_view.dart';
+import 'package:karpel_food_delivery/view/more/my_orders_view.dart';
+import 'package:karpel_food_delivery/view/more/pick_location_view.dart';
 import 'package:provider/provider.dart';
 
 class CheckoutView extends StatefulWidget {

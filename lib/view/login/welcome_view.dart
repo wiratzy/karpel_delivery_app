@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:kons2/view/login/login_view.dart';
-import 'package:kons2/view/login/sign_up_view.dart';
-import 'package:kons2/common/color_extension.dart';
-import 'package:kons2/common_widget/round_button.dart';
+import 'package:karpel_food_delivery/view/login/login_view.dart';
+import 'package:karpel_food_delivery/view/login/sign_up_view.dart';
+import 'package:karpel_food_delivery/common/color_extension.dart';
+import 'package:karpel_food_delivery/common_widget/round_button.dart';
 
 class WelcomeView extends StatefulWidget {
   const WelcomeView({super.key});

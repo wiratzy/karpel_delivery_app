@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:kons2/common/color_extension.dart'; // Asumsi Anda punya file ini untuk warna
-import 'package:kons2/models/order_model.dart'; // Pastikan path ini benar
-import 'package:kons2/providers/auth_provider.dart';
-import 'package:kons2/providers/order_provider.dart';
-import 'package:kons2/view/owner_restaurant/orderList/order_detail_view.dart';
+import 'package:karpel_food_delivery/common/color_extension.dart'; // Asumsi Anda punya file ini untuk warna
+import 'package:karpel_food_delivery/models/order_model.dart'; // Pastikan path ini benar
+import 'package:karpel_food_delivery/providers/auth_provider.dart';
+import 'package:karpel_food_delivery/providers/order_provider.dart';
+import 'package:karpel_food_delivery/view/owner_restaurant/orderList/order_detail_view.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart'; // Untuk format mata uang
 
@@ -219,7 +219,7 @@ class _RestoOrderListViewState extends State<RestoOrderListView> {
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
                           width: 50, height: 50, color: Colors.grey.shade200,
-                          child: const Icon(Icons.broken_image, color: Colors.grey),
+                          child: Image.network(item.item.image, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.broken_image)),
                         );
                       },
                     ),

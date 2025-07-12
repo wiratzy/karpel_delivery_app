@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:kons2/models/order_model.dart';
-import 'package:kons2/models/order_request_model.dart';
-import 'package:kons2/models/user_model.dart';
-import 'package:kons2/services/api_services.dart';
+import 'package:karpel_food_delivery/models/order_model.dart';
+import 'package:karpel_food_delivery/models/order_request_model.dart';
+import 'package:karpel_food_delivery/models/user_model.dart';
+import 'package:karpel_food_delivery/services/api_services.dart';
 
 class OrderProvider extends ChangeNotifier {
   final ApiService _apiService;

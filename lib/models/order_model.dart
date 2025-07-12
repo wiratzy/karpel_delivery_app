@@ -1,6 +1,6 @@
-import 'package:kons2/models/driver_model.dart';
-import 'package:kons2/models/home_model.dart';
-import 'package:kons2/models/user_model.dart';
+import 'package:karpel_food_delivery/models/driver_model.dart';
+import 'package:karpel_food_delivery/models/home_model.dart';
+import 'package:karpel_food_delivery/models/user_model.dart';
 
 class Order {
   final int id;
@@ -17,6 +17,9 @@ class Order {
   final List<OrderItemModel> items;
 final User? user;
 final Driver? driver;
+final int? restaurantRating;
+final int? itemRating;
+
 
   Order({
     required this.id,
@@ -33,6 +36,8 @@ final Driver? driver;
     required this.items,
     required this.user,
     this.driver,
+     this.restaurantRating, // ✅ Tambahan
+    this.itemRating,       // ✅ Tambahan
   });
 
   Order copyWith({
@@ -82,6 +87,8 @@ final Driver? driver;
       driver: json['driver'] != null
           ? Driver.fromJson(json['driver'])
           : null,
+            restaurantRating: json['restaurant_rating'], // ✅ Tambahan
+        itemRating: json['item_rating'],             // ✅ Tambahan
     );
   } catch (e, st) {
     print('❌ Error parsing Order.fromJson: $e');

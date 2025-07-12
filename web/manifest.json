@@ -1,6 +1,6 @@
 {
-    "name": "kons2",
-    "short_name": "kons2",
+    "name": "karpel_food_delivery",
+    "short_name": "karpel_food_delivery",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

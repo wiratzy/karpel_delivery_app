@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
-import 'package:kons2/common_widget/restaurant_conflict_dialog.dart';
-import 'package:kons2/models/home_model.dart';
-import 'package:kons2/providers/auth_provider.dart';
+import 'package:karpel_food_delivery/common_widget/restaurant_conflict_dialog.dart';
+import 'package:karpel_food_delivery/models/home_model.dart';
+import 'package:karpel_food_delivery/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import '../../common/color_extension.dart';
 import '../../common_widget/round_icon_button.dart';

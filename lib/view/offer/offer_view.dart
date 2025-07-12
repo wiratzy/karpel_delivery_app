@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:kons2/common/color_extension.dart';
-import 'package:kons2/common_widget/popular_restaurant_row.dart';
-import 'package:kons2/view/more/my_order_view.dart';
+import 'package:karpel_food_delivery/common/color_extension.dart';
+import 'package:karpel_food_delivery/common_widget/popular_restaurant_row.dart';
+import 'package:karpel_food_delivery/view/more/my_order_view.dart';
 
 class OfferView extends StatefulWidget {
   const OfferView({super.key});

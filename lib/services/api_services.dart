@@ -2,14 +2,13 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:kons2/models/driver_model.dart';
-import 'package:kons2/models/home_model.dart';
-import 'package:kons2/models/order_model.dart';
-import 'package:kons2/models/user_model.dart';
+import 'package:karpel_food_delivery/models/driver_model.dart';
+import 'package:karpel_food_delivery/models/home_model.dart';
+import 'package:karpel_food_delivery/models/user_model.dart';
 
 class ApiService {
   // static const String baseUrl = 'http://192.168.239.220:8000/api';
-  // static const String baseUrl = 'http://10.0.162.47:8000/api';
+  // static const String baseUrl = 'http://192.168.1.116:8000/api';
   static const String baseUrl = 'http://202.155.132.96/api';
 
   Future<Map<String, dynamic>> login(String email, String password) async {
@@ -552,123 +551,269 @@ class ApiService {
     }
   }
 
-  Future<Map<String, dynamic>> checkout(String token, Map<String, dynamic> data) async {
-  final response = await http.post(
-    Uri.parse('$baseUrl/checkout'),
-    headers: {
-      'Authorization': 'Bearer $token',
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    },
-    body: jsonEncode(data),
-  );
+  Future<Map<String, dynamic>> checkout(
+      String token, Map<String, dynamic> data) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/checkout'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: jsonEncode(data),
+    );
 
-  if (response.statusCode == 201) {
-    return jsonDecode(response.body); // sukses, return responsenya
-  } else {
-    throw Exception('Gagal melakukan checkout: ${response.body}');
+    if (response.statusCode == 201) {
+      return jsonDecode(response.body); // sukses, return responsenya
+    } else {
+      throw Exception('Gagal melakukan checkout: ${response.body}');
+    }
   }
-}
 
-Future<List<dynamic>> getMyOrders(String token) async {
-  final response = await http.get(
-    Uri.parse('$baseUrl/user/my-orders'),
-    headers: {
-      'Authorization': 'Bearer $token',
-      'Accept': 'application/json',
-    },
-  );
+  Future<List<dynamic>> getMyOrders(String token) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/user/my-orders'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      },
+    );
 
-  if (response.statusCode == 200) {
-    final body = jsonDecode(response.body);
-    print("📦 getMyOrders: ${body['data']}");
-    return body['data']; // HANYA KEMBALIKAN DATA-NYA
-  } else {
-    throw Exception('Gagal mengambil daftar pesanan: ${response.statusCode}');
+    if (response.statusCode == 200) {
+      final body = jsonDecode(response.body);
+      print("📦 getMyOrders: ${body['data']}");
+      return body['data']; // HANYA KEMBALIKAN DATA-NYA
+    } else {
+      throw Exception('Gagal mengambil daftar pesanan: ${response.statusCode}');
+    }
   }
-}
 
+  Future<Map<String, dynamic>> getCustomerOrderById(
+      String token, int id) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/user/orders/$id'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      },
+    );
 
-
-Future<Map<String, dynamic>> getCustomerOrderById(String token, int id) async {
-  final response = await http.get(
-    Uri.parse('$baseUrl/user/orders/$id'),
-    headers: {
-      'Authorization': 'Bearer $token',
-      'Accept': 'application/json',
-    },
-  );
-
-  if (response.statusCode == 200) {
-    final body = jsonDecode(response.body);
-    return body['data']; // Kembalikan data pesanan
-  } else {
-    throw Exception('Gagal mengambil detail pesanan: ${response.statusCode}');
+    if (response.statusCode == 200) {
+      final body = jsonDecode(response.body);
+      return body['data']; // Kembalikan data pesanan
+    } else {
+      throw Exception('Gagal mengambil detail pesanan: ${response.statusCode}');
+    }
   }
-}
-Future<void> updateCustomerOrderStatus(String token, int orderId, String status) async {
+
+  Future<void> updateCustomerOrderStatus(
+  String token,
+  int orderId,
+  String status, {
+  int? restaurantRating,
+  int? itemRating,
+}) async {
   final url = Uri.parse('$baseUrl/user/orders/$orderId/status');
+  
+  final body = {
+    'status': status,
+    if (restaurantRating != null) 'restaurant_rating': restaurantRating,
+    if (itemRating != null) 'item_rating': itemRating,
+  };
+
   final response = await http.put(
     url,
     headers: {
       'Authorization': 'Bearer $token',
       'Content-Type': 'application/json',
     },
-    body: jsonEncode({'status': status}),
+    body: jsonEncode(body),
   );
 
   if (response.statusCode != 200) {
-    throw Exception('Gagal update status');
+    throw Exception('Gagal update status: ${response.body}');
   }
 }
+
 
 // services/api_service.dart
-Future<void> assignDriverToOrder({
-  required int orderId,
-  required int driverId,
-  required String token,
-}) async {
-  final response = await http.post(
-    Uri.parse('$baseUrl/restaurants/orders/$orderId/assign-driver'),
-    headers: {
-      'Authorization': 'Bearer $token',
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    },
-    body: jsonEncode({
-      'driver_id': driverId,
-    }),
-  );
+  Future<void> assignDriverToOrder({
+    required int orderId,
+    required int driverId,
+    required String token,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/restaurants/orders/$orderId/assign-driver'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: jsonEncode({
+        'driver_id': driverId,
+      }),
+    );
 
-  print('Assign Driver Response: ${response.statusCode}');
-  print('Body: ${response.body}');
+    print('Assign Driver Response: ${response.statusCode}');
+    print('Body: ${response.body}');
 
-  if (response.statusCode != 200) {
-    throw Exception('Gagal assign driver: ${response.body}');
+    if (response.statusCode != 200) {
+      throw Exception('Gagal assign driver: ${response.body}');
+    }
   }
-}
 
- Future<List<Driver>> getAvailableDrivers(String token) async {
-  final response = await http.get(
-    Uri.parse('$baseUrl/restaurants/drivers'),
-    headers: {
-      'Authorization': 'Bearer $token',
-      'Accept': 'application/json',
-    },
-  );
+  Future<List<Driver>> getAvailableDrivers(String token) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/restaurants/drivers'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      },
+    );
 
-  print('Response Status: ${response.statusCode}');
-  print('Response Body: ${response.body}');
+    print('Response Status: ${response.statusCode}');
+    print('Response Body: ${response.body}');
 
-  if (response.statusCode == 200) {
-    final data = jsonDecode(response.body);
-    return (data['data'] as List)
-        .map((driver) => Driver.fromJson(driver))
-        .toList();
-  } else {
-    throw Exception('Gagal mengambil daftar driver: ${response.statusCode}');
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return (data['data'] as List)
+          .map((driver) => Driver.fromJson(driver))
+          .toList();
+    } else {
+      throw Exception('Gagal mengambil daftar driver: ${response.statusCode}');
+    }
   }
-}
 
+  Future<List<Item>> getOwnerItems(String token, {int? categoryId}) async {
+    final query = categoryId != null ? '?item_category_id=$categoryId' : '';
+    final response = await http.get(
+      Uri.parse('$baseUrl/restaurants-items$query'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      },
+    );
 
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return (data['data'] as List)
+          .map((itemJson) => Item.fromJson(itemJson))
+          .toList();
+    } else {
+      throw Exception('Gagal memuat data item owner');
+    }
+  }
+
+  Future<Map<String, dynamic>> createItem({
+    required String token,
+    required Map<String, String?> data,
+    File? imageFile,
+  }) async {
+    final uri = Uri.parse('$baseUrl/restaurants-items');
+    final request = http.MultipartRequest('POST', uri)
+      ..headers['Authorization'] = 'Bearer $token'
+      ..headers['Accept'] = 'application/json';
+
+    data.forEach((key, value) {
+      if (value != null) {
+        request.fields[key] = value;
+      }
+    });
+
+    if (imageFile != null) {
+      request.files
+          .add(await http.MultipartFile.fromPath('image', imageFile.path));
+    }
+
+    final response = await request.send();
+    final resBody = await response.stream.bytesToString();
+    final resJson = jsonDecode(resBody);
+
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      return resJson;
+    } else {
+      throw Exception(resJson['message'] ?? 'Gagal membuat item');
+    }
+  }
+
+  Future<Map<String, dynamic>> updateItem({
+    required String token,
+    required int itemId,
+    required Map<String, String?> data,
+    File? imageFile,
+  }) async {
+    final url = Uri.parse('$baseUrl/restaurants-items/$itemId');
+    final request = http.MultipartRequest('POST', url);
+
+    request.headers['Authorization'] = 'Bearer $token';
+    request.headers['Accept'] = 'application/json';
+    request.fields['_method'] = 'PUT'; // Tambahkan spoof method
+
+    data.forEach((key, value) {
+      print('🧪 Sending update item data:');
+      print('🧾 $key: $value');
+
+      // Kirim hanya jika tidak null dan tidak kosong
+      if (value != null && value.toString().trim().isNotEmpty) {
+        request.fields[key] = value;
+      }
+    });
+
+    if (imageFile != null) {
+      request.files
+          .add(await http.MultipartFile.fromPath('image', imageFile.path));
+    }
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Gagal update item: ${response.body}');
+    }
+  }
+
+  Future<Item> fetchItemDetail({
+    required String token,
+    required int itemId,
+  }) async {
+    final url = Uri.parse('$baseUrl/restaurants-items/detail/$itemId');
+    final response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['data'] != null) {
+        return Item.fromJson(data['data']);
+      } else {
+        throw Exception('Item tidak ditemukan dalam response');
+      }
+    } else {
+      throw Exception('Gagal memuat detail item: ${response.body}');
+    }
+  }
+
+  Future<void> deleteItem({
+    required String token,
+    required int itemId,
+  }) async {
+    final url = Uri.parse('$baseUrl/restaurants-items/$itemId');
+    final response = await http.delete(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Gagal menghapus item: ${response.body}');
+    }
+  }
 }

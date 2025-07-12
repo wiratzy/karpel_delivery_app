@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:kons2/models/home_model.dart'; // Pastikan path ini benar (berisi Item dan ItemCategory)
-import 'package:kons2/providers/auth_provider.dart';
-import 'package:kons2/services/api_services.dart';
+import 'package:karpel_food_delivery/models/home_model.dart'; // Pastikan path ini benar (berisi Item dan ItemCategory)
+import 'package:karpel_food_delivery/providers/auth_provider.dart';
+import 'package:karpel_food_delivery/services/api_services.dart';
 
 class ItemsProvider with ChangeNotifier {
   final ApiService _apiService;

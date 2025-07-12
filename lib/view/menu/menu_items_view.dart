@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:kons2/common/color_extension.dart';
-import 'package:kons2/common_widget/menu_item_row.dart';
-import 'package:kons2/common_widget/round_textfield.dart';
-import 'package:kons2/models/home_model.dart';
-import 'package:kons2/view/menu/item_details_view.dart';
-import 'package:kons2/view/more/my_order_view.dart';
+import 'package:karpel_food_delivery/common/color_extension.dart';
+import 'package:karpel_food_delivery/common_widget/menu_item_row.dart';
+import 'package:karpel_food_delivery/common_widget/round_textfield.dart';
+import 'package:karpel_food_delivery/models/home_model.dart';
+import 'package:karpel_food_delivery/view/menu/item_details_view.dart';
+import 'package:karpel_food_delivery/view/more/my_order_view.dart';
 
 class MenuItemsView extends StatefulWidget {
   final ItemCategory mObj;

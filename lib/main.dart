@@ -1,38 +1,43 @@
 import 'package:flutter/material.dart';
-import 'package:kons2/providers/customer_order_provider.dart';
-import 'package:kons2/providers/driver_provider.dart';
-import 'package:kons2/providers/items_provider.dart';
-import 'package:kons2/providers/order_provider.dart';
-import 'package:kons2/view/home/home_view.dart';
-import 'package:kons2/view/more/pick_location_view.dart';
-import 'package:kons2/view/owner_restaurant/orderList/resto_order_list_view.dart';
+import 'package:karpel_food_delivery/providers/create_item_provider.dart';
+import 'package:karpel_food_delivery/providers/customer_order_provider.dart';
+import 'package:karpel_food_delivery/providers/driver_provider.dart';
+import 'package:karpel_food_delivery/providers/edit_item_provider.dart';
+import 'package:karpel_food_delivery/providers/items_provider.dart';
+import 'package:karpel_food_delivery/providers/order_provider.dart';
+import 'package:karpel_food_delivery/providers/owner_item_provider.dart';
+import 'package:karpel_food_delivery/view/home/home_view.dart';
+import 'package:karpel_food_delivery/view/more/pick_location_view.dart';
+import 'package:karpel_food_delivery/view/owner_restaurant/food_resto/create_food_view.dart';
+import 'package:karpel_food_delivery/view/owner_restaurant/food_resto/resto_food_info_view.dart';
+import 'package:karpel_food_delivery/view/owner_restaurant/orderList/resto_order_list_view.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:kons2/services/api_services.dart';
-import 'package:kons2/services/storage_services.dart'; // Import service baru
+import 'package:karpel_food_delivery/services/api_services.dart';
+import 'package:karpel_food_delivery/services/storage_services.dart'; // Import service baru
 import 'package:intl/date_symbol_data_local.dart'; // <-- 1. Import package ini
 
-import 'package:kons2/providers/auth_provider.dart';
-import 'package:kons2/providers/tab_provider.dart';
-import 'package:kons2/providers/home_provider.dart';
-import 'package:kons2/providers/category_items_provider.dart';
-import 'package:kons2/providers/item_provider.dart';
+import 'package:karpel_food_delivery/providers/auth_provider.dart';
+import 'package:karpel_food_delivery/providers/tab_provider.dart';
+import 'package:karpel_food_delivery/providers/home_provider.dart';
+import 'package:karpel_food_delivery/providers/category_items_provider.dart';
+import 'package:karpel_food_delivery/providers/item_provider.dart';
 
-import 'package:kons2/view/main_tabview/main_tabview.dart';
-import 'package:kons2/view/login/login_view.dart';
-import 'package:kons2/view/login/sign_up_view.dart';
-import 'package:kons2/view/login/welcome_view.dart';
-import 'package:kons2/view/menu/all_menu_view.dart';
-import 'package:kons2/view/more/my_order_view.dart';
-import 'package:kons2/view/admin/admin_view.dart';
-import 'package:kons2/view/driver/driver_view.dart';
-import 'package:kons2/view/owner_restaurant/restaurant_owner_view.dart';
-import 'package:kons2/view/on_boarding/startup_view.dart';
-import 'package:kons2/view/on_boarding/on_boarding_view.dart';
+import 'package:karpel_food_delivery/view/main_tabview/main_tabview.dart';
+import 'package:karpel_food_delivery/view/login/login_view.dart';
+import 'package:karpel_food_delivery/view/login/sign_up_view.dart';
+import 'package:karpel_food_delivery/view/login/welcome_view.dart';
+import 'package:karpel_food_delivery/view/menu/all_menu_view.dart';
+import 'package:karpel_food_delivery/view/more/my_order_view.dart';
+import 'package:karpel_food_delivery/view/admin/admin_view.dart';
+import 'package:karpel_food_delivery/view/driver/driver_view.dart';
+import 'package:karpel_food_delivery/view/owner_restaurant/restaurant_owner_view.dart';
+import 'package:karpel_food_delivery/view/on_boarding/startup_view.dart';
+import 'package:karpel_food_delivery/view/on_boarding/on_boarding_view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeDateFormatting('id_ID', null); // <-- 4. Tambahkan inisialisasi untuk 'id_ID'
+  await initializeDateFormatting('id_ID', null);
 
   final prefs = await SharedPreferences.getInstance();
 
@@ -54,16 +59,27 @@ void main() async {
         ChangeNotifierProvider(create: (_) => HomeProvider()),
         ChangeNotifierProvider(create: (_) => CategoryItemsProvider()),
         ChangeNotifierProvider(create: (_) => ItemProvider()),
-        ChangeNotifierProvider(create: (_) => CustomerOrderProvider(ApiService()),),
+        ChangeNotifierProvider(
+          create: (_) => CustomerOrderProvider(ApiService()),
+        ),
         ChangeNotifierProvider(create: (_) => OrderProvider(ApiService())),
+        ChangeNotifierProvider(
+          create: (_) => CreateItemProvider(ApiService()),
+        ),
+        ChangeNotifierProvider(create: (_) => OwnerItemProvider(ApiService())),
+        ChangeNotifierProvider(create: (_) => CreateItemProvider(ApiService())),
         ChangeNotifierProvider(
           create: (context) => ItemsProvider(
             Provider.of<ApiService>(context, listen: false),
             Provider.of<AuthProvider>(context, listen: false),
           ),
         ),
-                ChangeNotifierProvider(create: (_) => DriverProvider(ApiService())), // <-- INI WAJIB ADA
+        ChangeNotifierProvider(
+          create: (_) => EditItemProvider(ApiService()),
+        ),
 
+        ChangeNotifierProvider(
+            create: (_) => DriverProvider(ApiService())), // <-- INI WAJIB ADA
       ],
       child: MyApp(
         isLoggedIn: isLoggedIn,
@@ -106,6 +122,11 @@ class MyApp extends StatelessWidget {
         '/mapPicker': (context) => const PickLocationView(),
         '/allMenuView': (context) => const AllMenuView(),
         '/restoTransactions': (context) => RestoOrderListView(),
+        '/restoFoodInfo': (context) => const RestoFoodInfoView(),
+        '/createItem': (context) => ChangeNotifierProvider(
+              create: (_) => CreateItemProvider(ApiService()),
+              child: const CreateItemView(),
+            ),
       },
     );
   }

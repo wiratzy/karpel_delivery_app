@@ -2,11 +2,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import 'package:kons2/common/color_extension.dart';
-import 'package:kons2/common_widget/round_button.dart';
-import 'package:kons2/common_widget/round_textfield.dart';
-import 'package:kons2/providers/auth_provider.dart';
-import 'package:kons2/view/more/my_order_view.dart';
+import 'package:karpel_food_delivery/common/color_extension.dart';
+import 'package:karpel_food_delivery/common_widget/round_button.dart';
+import 'package:karpel_food_delivery/common_widget/round_textfield.dart';
+import 'package:karpel_food_delivery/providers/auth_provider.dart';
+import 'package:karpel_food_delivery/view/more/my_order_view.dart';
 
 class ProfileView extends StatefulWidget {
   const ProfileView({super.key});
@@ -38,6 +38,8 @@ class _ProfileViewState extends State<ProfileView> {
       txtEmail.text = user.email;
       txtMobile.text = user.phone;
       selectedAddress = user.address;
+      latitude = user.latitude;
+      longitude = user.longitude;
       // latitude & longitude bisa disimpan saat login jika backend mengirim datanya
     }
   }
@@ -64,53 +66,54 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   Future<void> handleUpdate() async {
-  final auth = Provider.of<AuthProvider>(context, listen: false);
-  final messenger = ScaffoldMessenger.of(context);
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final messenger = ScaffoldMessenger.of(context);
 
-  if (txtName.text.isEmpty ||
-      txtEmail.text.isEmpty ||
-      txtMobile.text.isEmpty ||
-      selectedAddress == null ||
-      latitude == null ||
-      longitude == null) {
-    messenger.showSnackBar(
-      const SnackBar(content: Text("Semua field harus diisi termasuk lokasi")),
-    );
-    return;
-  }
-
-  if (txtPassword.text.isNotEmpty &&
-      txtPassword.text != txtConfirmPassword.text) {
-    messenger.showSnackBar(
-      const SnackBar(content: Text("Password tidak cocok")),
-    );
-    return;
-  }
-
-  try {
-    await auth.updateUser(
-      name: txtName.text,
-      email: txtEmail.text,
-      phone: txtMobile.text,
-      address: selectedAddress!,
-      latitude: latitude!,
-      longitude: longitude!,
-      password: txtPassword.text.isNotEmpty ? txtPassword.text : null,
-      photo: image != null ? File(image!.path) : null,
-    );
-
-    if (mounted) {
-      setState(() => image = null);
+    // 1. Validasi field teks dasar tidak boleh kosong
+    if (txtName.text.isEmpty || txtEmail.text.isEmpty || txtMobile.text.isEmpty || selectedAddress == null) {
       messenger.showSnackBar(
-        const SnackBar(content: Text("Profil berhasil diperbarui")),
+        const SnackBar(content: Text("Nama, Email, No. HP, dan Alamat tidak boleh kosong")),
+      );
+      return;
+    }
+
+    // 2. Validasi password (jika diisi)
+    if (txtPassword.text.isNotEmpty && txtPassword.text != txtConfirmPassword.text) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text("Password tidak cocok")),
+      );
+      return;
+    }
+
+    try {
+      // Karena latitude & longitude sudah diinisialisasi, kita bisa langsung mengirimnya.
+      // API Anda harus bisa menangani jika nilainya null (untuk user yang belum pernah set lokasi sama sekali).
+      await auth.updateUser(
+        name: txtName.text,
+        email: txtEmail.text,
+        phone: txtMobile.text,
+        address: selectedAddress!,
+        latitude: latitude!,   // Nilai ini sekarang sudah ada dari initState
+        longitude: longitude!, // Nilai ini sekarang sudah ada dari initState
+        password: txtPassword.text.isNotEmpty ? txtPassword.text : null,
+        photo: image != null ? File(image!.path) : null,
+      );
+
+      if (mounted) {
+        setState(() => image = null);
+        txtPassword.clear();
+        txtConfirmPassword.clear();
+        
+        messenger.showSnackBar(
+          const SnackBar(content: Text("Profil berhasil diperbarui")),
+        );
+      }
+    } catch (e) {
+      messenger.showSnackBar(
+        SnackBar(content: Text("Gagal memperbarui profil: $e")),
       );
     }
-  } catch (e) {
-    messenger.showSnackBar(
-      SnackBar(content: Text("Gagal memperbarui profil: $e")),
-    );
   }
-}
 
 
   Future<void> handleLogout() async {

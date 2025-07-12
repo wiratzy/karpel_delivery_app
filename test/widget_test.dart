@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:kons2/models/user_model.dart';
-import 'package:kons2/providers/auth_provider.dart';
-import 'package:kons2/providers/home_provider.dart';
-import 'package:kons2/models/home_model.dart';
-import 'package:kons2/services/api_services.dart';
-import 'package:kons2/view/home/home_view.dart';
+import 'package:karpel_food_delivery/models/user_model.dart';
+import 'package:karpel_food_delivery/providers/auth_provider.dart';
+import 'package:karpel_food_delivery/providers/home_provider.dart';
+import 'package:karpel_food_delivery/models/home_model.dart';
+import 'package:karpel_food_delivery/services/api_services.dart';
+import 'package:karpel_food_delivery/view/home/home_view.dart';
 import 'package:provider/provider.dart';
 
 void main() {

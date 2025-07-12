@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:kons2/common/color_extension.dart';
-import 'package:kons2/common_widget/tab_button.dart'; // Pastikan path ini benar
-import 'package:kons2/providers/auth_provider.dart';
-import 'package:kons2/view/home/home_view.dart';
-import 'package:kons2/view/more/more_view.dart';
-import 'package:kons2/view/profile/profile_view.dart';
+import 'package:karpel_food_delivery/common/color_extension.dart';
+import 'package:karpel_food_delivery/common_widget/tab_button.dart'; // Pastikan path ini benar
+import 'package:karpel_food_delivery/providers/auth_provider.dart';
+import 'package:karpel_food_delivery/view/home/home_view.dart';
+import 'package:karpel_food_delivery/view/more/more_view.dart';
+import 'package:karpel_food_delivery/view/profile/profile_view.dart';
 import 'package:provider/provider.dart';
 
 class MainTabView extends StatefulWidget {

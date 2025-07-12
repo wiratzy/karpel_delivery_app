@@ -1,4 +1,4 @@
-import 'package:kons2/cofing.dart';
+import 'package:karpel_food_delivery/cofing.dart';
 
 class Restaurant {
   final int id;
@@ -10,6 +10,7 @@ class Restaurant {
   final String? foodType;
   final String? location;
   final double deliveryFee;
+  
 
   Restaurant({
     required this.id,
@@ -68,6 +69,8 @@ class Item {
   final String? price;
   final int? itemCategoryId;
   final int? restaurantId;
+    final ItemCategory? itemCategory; // <- tambahkan ini
+
 
   Item({
     required this.id,
@@ -80,6 +83,7 @@ class Item {
     required this.price,
     this.itemCategoryId,
     this.restaurantId,
+    this.itemCategory,
   });
 
   factory Item.fromJson(Map<String, dynamic> json) {
@@ -97,6 +101,9 @@ class Item {
          restaurantId: json['restaurant_id'] ??
         (json['restaurant'] != null ? json['restaurant']['id'] : null), // <- FIX DISINI
       restaurant: Restaurant.fromJson(json['restaurant'] ?? {}),
+       itemCategory: json['item_category'] != null
+          ? ItemCategory.fromJson(json['item_category'])
+          : null,
     );
   }
   Map<String, dynamic> toJson() => {
@@ -118,13 +125,13 @@ class ItemCategory {
   final int id;
   final String name;
   final String image;
-  final int itemsCount;
+  final int? itemsCount;
 
   ItemCategory({
     required this.id,
     required this.name,
     required this.image,
-    required this.itemsCount,
+     this.itemsCount,
   });
 
   factory ItemCategory.fromJson(Map<String, dynamic> json) => ItemCategory(

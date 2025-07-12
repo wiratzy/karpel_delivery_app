@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:kons2/models/cart_model.dart';
+import 'package:karpel_food_delivery/models/cart_model.dart';
 import '../models/home_model.dart';
 import '../services/api_services.dart';
 

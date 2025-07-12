@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:kons2/view/menu/item_details_view.dart';
+import 'package:karpel_food_delivery/view/menu/item_details_view.dart';
 import 'package:provider/provider.dart';
-import 'package:kons2/common/color_extension.dart'; // Pastikan path ini benar
-import 'package:kons2/common_widget/round_textfield.dart'; // Pastikan path ini benar
-import 'package:kons2/common_widget/recent_item_row.dart'; // Pastikan path ini benar
-import 'package:kons2/providers/items_provider.dart'; // Pastikan path ini benar
+import 'package:karpel_food_delivery/common/color_extension.dart'; // Pastikan path ini benar
+import 'package:karpel_food_delivery/common_widget/round_textfield.dart'; // Pastikan path ini benar
+import 'package:karpel_food_delivery/common_widget/recent_item_row.dart'; // Pastikan path ini benar
+import 'package:karpel_food_delivery/providers/items_provider.dart'; // Pastikan path ini benar
 
 class AllMenuView extends StatefulWidget {
   const AllMenuView({super.key});

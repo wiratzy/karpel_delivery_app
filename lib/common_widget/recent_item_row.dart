@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:kons2/cofing.dart';
-import 'package:kons2/common/color_extension.dart';
-import 'package:kons2/models/home_model.dart'; // Impor kelas Item
+import 'package:karpel_food_delivery/cofing.dart';
+import 'package:karpel_food_delivery/common/color_extension.dart';
+import 'package:karpel_food_delivery/models/home_model.dart'; // Impor kelas Item
 
 
 class RecentItemRow extends StatelessWidget {

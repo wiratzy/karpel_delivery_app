@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:kons2/common/color_extension.dart';
-import 'package:kons2/models/user_model.dart';
-import 'package:kons2/services/api_services.dart';
-import 'package:kons2/providers/auth_provider.dart';
+import 'package:karpel_food_delivery/common/color_extension.dart';
+import 'package:karpel_food_delivery/models/user_model.dart';
+import 'package:karpel_food_delivery/services/api_services.dart';
+import 'package:karpel_food_delivery/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 
 class CustomerView extends StatefulWidget {

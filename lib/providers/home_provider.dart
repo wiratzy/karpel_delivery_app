@@ -1,8 +1,8 @@
 // lib/providers/home_provider.dart
 import 'package:flutter/material.dart';
-import 'package:kons2/models/home_model.dart';
+import 'package:karpel_food_delivery/models/home_model.dart';
 
-import 'package:kons2/services/api_services.dart';
+import 'package:karpel_food_delivery/services/api_services.dart';
 
 class HomeProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();

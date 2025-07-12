@@ -12,7 +12,7 @@
 
 
     <application
-        android:label="kons2"
+        android:label="karpel_food_delivery"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:enableOnBackInvokedCallback="true"

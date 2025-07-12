@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:kons2/providers/auth_provider.dart';
+import 'package:karpel_food_delivery/providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 
 class DriverView extends StatelessWidget {

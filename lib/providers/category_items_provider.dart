@@ -1,7 +1,7 @@
 // lib/providers/category_items_provider.dart
 import 'package:flutter/material.dart';
-import 'package:kons2/models/home_model.dart';
 import '../services/api_services.dart';
+import 'package:karpel_food_delivery/models/home_model.dart';
 
 class CategoryItemsProvider with ChangeNotifier {
   bool _isLoading = false;

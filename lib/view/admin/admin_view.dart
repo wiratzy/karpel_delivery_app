@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:kons2/common/color_extension.dart';
-import 'package:kons2/providers/auth_provider.dart';
-import 'package:kons2/view/admin/account/customer_view.dart';
+import 'package:karpel_food_delivery/common/color_extension.dart';
+import 'package:karpel_food_delivery/providers/auth_provider.dart';
+import 'package:karpel_food_delivery/view/admin/account/customer_view.dart';
 import 'package:provider/provider.dart';
 
 class AdminView extends StatelessWidget {

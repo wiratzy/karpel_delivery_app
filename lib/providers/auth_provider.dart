@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:kons2/models/user_model.dart';
+import 'package:karpel_food_delivery/models/user_model.dart';
 import '../services/api_services.dart';
 import '../services/storage_services.dart';
 
@@ -66,32 +66,40 @@ class AuthProvider extends ChangeNotifier {
 
   /// Mengelola state setelah login berhasil.
   Future<void> login(String email, String password) async {
-    _isLoading = true;
-    notifyListeners();
-    try {
-      final response = await _apiService.login(email, password);
-      _token = response['token'] as String?;
-      _user = User.fromJson(response['user']);
-      print("🧾 Login user data: ${response['user']}");
-      if (isLoggedIn) {
-        await _storageService.saveToken(_token!);
-        await _storageService.saveUser(_user!);
+  _isLoading = true;
+  notifyListeners();
+  try {
+    final response = await _apiService.login(email, password);
+    _token = response['token'] as String?;
 
-        // Jika yang login adalah customer, reset status onboardingnya ke false.
-        if (_user?.role == 'customer') {
-          await _storageService.saveOnboardingStatus(false);
-          _isOnboardingCompleted = false;
-        }
-      } else {
-        throw Exception('Login gagal: Token tidak diterima dari server.');
+    // Inject restaurant_id langsung ke dalam user map
+    final userMap = Map<String, dynamic>.from(response['user']);
+    userMap['restaurant_id'] = response['restaurant_id'];
+
+    _user = User.fromJson(userMap);
+
+    print("🧾 Login user data: $userMap");
+    print("✅ Parsed restaurantId: ${_user?.restaurantId}");
+
+    if (isLoggedIn) {
+      await _storageService.saveToken(_token!);
+      await _storageService.saveUser(_user!);
+
+      if (_user?.role == 'customer') {
+        await _storageService.saveOnboardingStatus(false);
+        _isOnboardingCompleted = false;
       }
-    } catch (e) {
-      rethrow; // Biarkan UI yang menampilkan error.
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+    } else {
+      throw Exception('Login gagal: Token tidak diterima dari server.');
     }
+  } catch (e) {
+    rethrow;
+  } finally {
+    _isLoading = false;
+    notifyListeners();
   }
+}
+
 
   /// Mengelola state setelah registrasi berhasil.
   Future<void> register({

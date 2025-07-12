@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:kons2/common/color_extension.dart';
-import 'package:kons2/common_widget/round_button.dart';
-import 'package:kons2/common_widget/round_textfield.dart';
-import 'package:kons2/providers/auth_provider.dart';
-import 'package:kons2/view/login/reset_password_view.dart';
+import 'package:karpel_food_delivery/common/color_extension.dart';
+import 'package:karpel_food_delivery/common_widget/round_button.dart';
+import 'package:karpel_food_delivery/common_widget/round_textfield.dart';
+import 'package:karpel_food_delivery/providers/auth_provider.dart';
+import 'package:karpel_food_delivery/view/login/reset_password_view.dart';
 import 'dart:io';
 
 class LoginView extends StatefulWidget {

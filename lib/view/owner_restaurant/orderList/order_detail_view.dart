@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:kons2/providers/driver_provider.dart';
-import 'package:kons2/view/more/choose_driver_modal.dart';
+import 'package:karpel_food_delivery/providers/driver_provider.dart';
+import 'package:karpel_food_delivery/view/more/choose_driver_modal.dart';
 import 'package:provider/provider.dart';
-import 'package:kons2/common/color_extension.dart';
-import 'package:kons2/models/order_model.dart';
-import 'package:kons2/providers/order_provider.dart';
-import 'package:kons2/providers/auth_provider.dart';
+import 'package:karpel_food_delivery/common/color_extension.dart';
+import 'package:karpel_food_delivery/models/order_model.dart';
+import 'package:karpel_food_delivery/providers/order_provider.dart';
+import 'package:karpel_food_delivery/providers/auth_provider.dart';
 
 class OrderDetailView extends StatefulWidget {
   final int orderId;

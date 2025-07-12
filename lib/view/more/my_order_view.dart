@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:kons2/cofing.dart';
-import 'package:kons2/common/color_extension.dart';
-import 'package:kons2/common_widget/round_button.dart';
-import 'package:kons2/view/more/checkout_view.dart';
-import 'package:kons2/providers/auth_provider.dart';
-import 'package:kons2/providers/item_provider.dart';
+import 'package:karpel_food_delivery/cofing.dart';
+import 'package:karpel_food_delivery/common/color_extension.dart';
+import 'package:karpel_food_delivery/common_widget/round_button.dart';
+import 'package:karpel_food_delivery/view/more/checkout_view.dart';
+import 'package:karpel_food_delivery/providers/auth_provider.dart';
+import 'package:karpel_food_delivery/providers/item_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shimmer/shimmer.dart';
 

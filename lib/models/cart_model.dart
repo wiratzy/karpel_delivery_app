@@ -1,4 +1,4 @@
-import 'package:kons2/models/home_model.dart';
+import 'package:karpel_food_delivery/models/home_model.dart';
 
 class CartItem {
   final int id;
