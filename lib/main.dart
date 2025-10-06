@@ -1,21 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // Tambahkan import ini untuk SystemChrome
+import 'package:karpel_food_delivery/models/driver_model.dart';
+import 'package:karpel_food_delivery/providers/AdminRestaurantApplicationProvider.dart';
+import 'package:karpel_food_delivery/providers/admin_item_category_provider.dart';
+import 'package:karpel_food_delivery/providers/admin_restaurant_provider.dart';
 import 'package:karpel_food_delivery/providers/create_item_provider.dart';
 import 'package:karpel_food_delivery/providers/customer_order_provider.dart';
+import 'package:karpel_food_delivery/providers/customer_restaurant_provider.dart';
 import 'package:karpel_food_delivery/providers/driver_provider.dart';
 import 'package:karpel_food_delivery/providers/edit_item_provider.dart';
 import 'package:karpel_food_delivery/providers/items_provider.dart';
 import 'package:karpel_food_delivery/providers/order_provider.dart';
+import 'package:karpel_food_delivery/providers/owner_driver_provider.dart';
 import 'package:karpel_food_delivery/providers/owner_item_provider.dart';
 import 'package:karpel_food_delivery/view/home/home_view.dart';
 import 'package:karpel_food_delivery/view/more/pick_location_view.dart';
+import 'package:karpel_food_delivery/view/owner_restaurant/driver_resto/create_driver_view.dart';
+import 'package:karpel_food_delivery/view/owner_restaurant/driver_resto/edit_driver_view.dart';
+import 'package:karpel_food_delivery/view/owner_restaurant/driver_resto/resto_driver_info_view.dart';
 import 'package:karpel_food_delivery/view/owner_restaurant/food_resto/create_food_view.dart';
 import 'package:karpel_food_delivery/view/owner_restaurant/food_resto/resto_food_info_view.dart';
 import 'package:karpel_food_delivery/view/owner_restaurant/orderList/resto_order_list_view.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:karpel_food_delivery/services/api_services.dart';
-import 'package:karpel_food_delivery/services/storage_services.dart'; // Import service baru
-import 'package:intl/date_symbol_data_local.dart'; // <-- 1. Import package ini
+import 'package:karpel_food_delivery/services/storage_services.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 import 'package:karpel_food_delivery/providers/auth_provider.dart';
 import 'package:karpel_food_delivery/providers/tab_provider.dart';
@@ -37,6 +47,11 @@ import 'package:karpel_food_delivery/view/on_boarding/on_boarding_view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  // Mengunci orientasi ke potret
+  await SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
   await initializeDateFormatting('id_ID', null);
 
   final prefs = await SharedPreferences.getInstance();
@@ -53,12 +68,13 @@ void main() async {
           create: (context) => AuthProvider(
             context.read<ApiService>(),
             context.read<StorageService>(),
-          )..init(), // Panggil init untuk memuat sesi
+          )..init(),
         ),
         ChangeNotifierProvider(create: (_) => TabProvider()),
         ChangeNotifierProvider(create: (_) => HomeProvider()),
         ChangeNotifierProvider(create: (_) => CategoryItemsProvider()),
         ChangeNotifierProvider(create: (_) => ItemProvider()),
+        ChangeNotifierProvider(create: (_) => AdminRestaurantApplicationProvider()),
         ChangeNotifierProvider(
           create: (_) => CustomerOrderProvider(ApiService()),
         ),
@@ -77,9 +93,19 @@ void main() async {
         ChangeNotifierProvider(
           create: (_) => EditItemProvider(ApiService()),
         ),
-
+        ChangeNotifierProvider(create: (_) => DriverProvider(ApiService())),
         ChangeNotifierProvider(
-            create: (_) => DriverProvider(ApiService())), // <-- INI WAJIB ADA
+          create: (_) => OwnerDriverProvider(apiService: ApiService())..init(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => AdminRestaurantProvider(apiService: ApiService()),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => AdminItemCategoryProvider(apiService: ApiService()),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => CustomerRestaurantProvider(apiService: ApiService()),
+        ),
       ],
       child: MyApp(
         isLoggedIn: isLoggedIn,
@@ -123,10 +149,16 @@ class MyApp extends StatelessWidget {
         '/allMenuView': (context) => const AllMenuView(),
         '/restoTransactions': (context) => RestoOrderListView(),
         '/restoFoodInfo': (context) => const RestoFoodInfoView(),
+        '/restoDriverInfo': (context) => const RestoDriverInfoView(),
         '/createItem': (context) => ChangeNotifierProvider(
               create: (_) => CreateItemProvider(ApiService()),
               child: const CreateItemView(),
             ),
+        '/createDriver': (_) => const CreateDriverView(),
+        '/editDriver': (context) {
+          final driver = ModalRoute.of(context)!.settings.arguments as Driver;
+          return EditDriverView(driver: driver);
+        },
       },
     );
   }

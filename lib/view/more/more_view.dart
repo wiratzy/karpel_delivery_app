@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:karpel_food_delivery/common/color_extension.dart';
+import 'package:karpel_food_delivery/providers/auth_provider.dart';
 import 'package:karpel_food_delivery/view/more/inbox_view.dart';
 import 'package:karpel_food_delivery/view/more/my_order_view.dart';
 import 'package:karpel_food_delivery/view/more/my_orders_view.dart';
 import 'package:karpel_food_delivery/view/more/notifications_view.dart';
 import 'package:karpel_food_delivery/view/more/payment_details_view.dart';
+import 'package:provider/provider.dart';
 
 import 'about_us_view.dart';
 
@@ -17,43 +19,34 @@ class MoreView extends StatefulWidget {
 
 class _MoreViewState extends State<MoreView> {
   List moreArr = [
+  
     {
       "index": "1",
-      "name": "Payment Details",
-      "image": "assets/img/more_payment.png",
-      "base": 0
-    },
-    {
-      "index": "2",
       "name": "My Orders",
       "image": "assets/img/more_my_order.png",
       "base": 0
     },
     {
-      "index": "3",
-      "name": "Notifications",
-      "image": "assets/img/more_notification.png",
-      "base": 15
-    },
-    {
-      "index": "4",
-      "name": "Inbox",
-      "image": "assets/img/more_inbox.png",
-      "base": 0
-    },
-    {
-      "index": "5",
+      "index": "2",
       "name": "About Us",
       "image": "assets/img/more_info.png",
       "base": 0
     },
     {
-      "index": "6",
+      "index": "3",
       "name": "Logout",
       "image": "assets/img/more_info.png",
       "base": 0
     },
   ];
+
+  Future<void> handleLogout() async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    await auth.logout();
+    if (mounted) {
+      Navigator.pushReplacementNamed(context, '/welcome');
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -104,40 +97,21 @@ class _MoreViewState extends State<MoreView> {
                     return InkWell(
                       onTap: () {
                           switch (mObj["index"].toString()) {
+                         
+
                           case "1":
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const PaymentDetailsView()));
-
-                            break;
-
-                          case "2":
                              Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) =>
                                         const MyOrdersView()));
-                         
-                          case "3":
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const NotificationsView()));
-                           case "4":
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const InboxView()));
-                          case "5":
+                          case "2":
                             Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                     builder: (context) => const AboutUsView()));
-                          case "6":
-
+                          case "3":
+                            handleLogout();
 
                           default:
                         }

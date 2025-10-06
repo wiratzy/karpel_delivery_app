@@ -3,7 +3,6 @@ import 'package:karpel_food_delivery/cofing.dart';
 import 'package:karpel_food_delivery/common/color_extension.dart';
 import 'package:karpel_food_delivery/models/home_model.dart'; // Impor kelas Item
 
-
 class RecentItemRow extends StatelessWidget {
   final Item rObj; // Ubah dari Map menjadi Item
   final VoidCallback onTap;
@@ -27,11 +26,13 @@ class RecentItemRow extends StatelessWidget {
                 height: 70,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    width: 70,
-                    height: 70,
-                    color: Tcolor.secondaryText,
-                    child: const Icon(Icons.error, color: Colors.red),
+                  print('Image load error for ${rObj.name}: $error');
+                  return const Icon(
+                    Icons.broken_image, // Ikon standar untuk gambar rusak
+                    color: Colors
+                        .grey, // Beri warna abu-abu agar terlihat seperti placeholder
+                    size:
+                        85, // Sesuaikan ukurannya agar sama dengan gambar asli
                   );
                 },
               ),
@@ -63,7 +64,8 @@ class RecentItemRow extends StatelessWidget {
                             color: Tcolor.primaryText,
                             fontSize: 11,
                           ),
-                          overflow: TextOverflow.ellipsis, // Potong teks panjang
+                          overflow:
+                              TextOverflow.ellipsis, // Potong teks panjang
                         ),
                       ),
                       Text(
@@ -84,7 +86,8 @@ class RecentItemRow extends StatelessWidget {
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
                           ),
-                          overflow: TextOverflow.ellipsis, // Potong teks panjang
+                          overflow:
+                              TextOverflow.ellipsis, // Potong teks panjang
                         ),
                       ),
                     ],

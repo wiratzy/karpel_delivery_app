@@ -86,7 +86,7 @@ class _SignUpViewState extends State<SignUpView> {
             children: [
               const SizedBox(height: 64),
               Text(
-                "Sign Up",
+                "Daftar",
                 style: TextStyle(
                   color: Tcolor.primaryText,
                   fontSize: 30,
@@ -94,7 +94,7 @@ class _SignUpViewState extends State<SignUpView> {
                 ),
               ),
               Text(
-                "Add your details to Sign up",
+                "Tambahkan detail Anda untuk mendaftar",
                 style: TextStyle(
                   color: Tcolor.secondaryText,
                   fontSize: 14,
@@ -197,7 +197,7 @@ class _SignUpViewState extends State<SignUpView> {
               const SizedBox(height: 25),
               Consumer<AuthProvider>(
                 builder: (context, auth, _) => RoundButton(
-                  title: auth.isLoading ? "Loading..." : "Sign Up",
+                  title: auth.isLoading ? "Tunggu Sebentar..." : "Daftar",
                   // PERBAIKAN DI SINI
                   onPressed: auth.isLoading ? null : () {
                     _handleRegister();
@@ -211,19 +211,21 @@ class _SignUpViewState extends State<SignUpView> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      "Already Have an Account? ",
+                      "Sudah mempunyai akun? ",
                       style: TextStyle(
                         color: Tcolor.secondaryText,
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    Text(
-                      "Login",
-                      style: TextStyle(
-                        color: Tcolor.primary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
+                    Expanded(
+                      child: Text(
+                        "Masuk Sekarang",
+                        style: TextStyle(
+                          color: Tcolor.primary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ],

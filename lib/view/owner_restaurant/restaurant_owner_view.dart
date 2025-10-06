@@ -77,7 +77,7 @@ class _RestaurantOwnerHomeViewState extends State<RestaurantOwnerHomeView> {
             children: [
               const SizedBox(height: 20),
               const Text(
-                "WELCOME BACK",
+                "Selamat Datang kembali,",
                 style: TextStyle(
                   fontSize: 14,
                   letterSpacing: 1.5,
@@ -102,7 +102,7 @@ class _RestaurantOwnerHomeViewState extends State<RestaurantOwnerHomeView> {
                   childAspectRatio: 1,
                   children: [
                     _buildMenuCard(
-                      label: "Transaction",
+                      label: "Transaksi",
                       icon: Icons.receipt_long,
                       backgroundColor: Tcolor.primary,
                       iconColor: Colors.white,
@@ -110,17 +110,9 @@ class _RestaurantOwnerHomeViewState extends State<RestaurantOwnerHomeView> {
                         Navigator.pushNamed(context, '/restoTransactions');
                       },
                     ),
+               
                     _buildMenuCard(
-                      label: "Resto",
-                      icon: Icons.storefront,
-                      backgroundColor: Colors.grey.shade300,
-                      iconColor: Colors.black54,
-                      onTap: () {
-                        Navigator.pushNamed(context, '/restoInfo');
-                      },
-                    ),
-                    _buildMenuCard(
-                      label: "Food",
+                      label: "Daftar Makanan",
                       icon: Icons.food_bank_rounded,
                       backgroundColor: Colors.grey.shade300,
                       iconColor: Colors.black54,
@@ -129,7 +121,16 @@ class _RestaurantOwnerHomeViewState extends State<RestaurantOwnerHomeView> {
                       },
                     ),
                     _buildMenuCard(
-                      label: "Logout",
+                      label: "Daftar Jastip",
+                      icon: Icons.motorcycle,
+                      backgroundColor: Colors.grey.shade300,
+                      iconColor: Colors.black54,
+                      onTap: () {
+                        Navigator.pushNamed(context, '/restoDriverInfo');
+                      },
+                    ),
+                    _buildMenuCard(
+                      label: "Keluar",
                       icon: Icons.logout,
                       backgroundColor: Tcolor.primary,
                       iconColor: Colors.white,

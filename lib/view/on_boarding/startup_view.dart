@@ -14,7 +14,7 @@ class StartupView extends StatefulWidget {
 class _StartupViewState extends State<StartupView> {
   static const double allowedLatitude = -6.327;
   static const double allowedLongitude = 108.323;
-  static const double allowedRadiusInMeters = 25000; // 25 km
+  static const double allowedRadiusInMeters = 250000; // 25 km
 
   @override
   void initState() {
@@ -68,7 +68,7 @@ class _StartupViewState extends State<StartupView> {
         case 'admin':
           Navigator.pushReplacementNamed(context, '/admin');
           break;
-        case 'restaurant_owner':
+        case 'owner':
           Navigator.pushReplacementNamed(context, '/restaurantOwner');
           break;
         case 'driver':
@@ -136,12 +136,14 @@ class _StartupViewState extends State<StartupView> {
       builder: (context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-          title: Row(
-            children: const [
-              Icon(Icons.location_off, color: Colors.red),
-              SizedBox(width: 10),
-              Text("Wilayah Tidak Didukung"),
-            ],
+          title: Expanded(
+            child: Row(
+              children: const [
+                Icon(Icons.location_off, color: Colors.red),
+                SizedBox(width: 10),
+                Text("Wilayah Tidak Didukung", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              ],
+            ),
           ),
           content: const Text(
             "Mohon maaf, aplikasi ini hanya dapat digunakan di dalam wilayah operasional kami.",

@@ -26,6 +26,22 @@ class AuthProvider extends ChangeNotifier {
   bool get isOnboardingCompleted => _isOnboardingCompleted;
   bool get isLoggedIn => _token != null;
 
+
+void setUser(User newUser) {
+  _user = newUser;
+  notifyListeners();
+}
+
+Future<void> fetchUser() async {
+  if (_token == null) return;
+
+  final response = await _apiService.fetchUser(token: _token!);
+  _user = response;
+  await _storageService.saveUser(_user!);
+  notifyListeners();
+}
+
+
   /// **FUNGSI INIT YANG SUDAH DIPERBAIKI**
   /// Memuat sesi pengguna dengan urutan yang benar dan "sadar-role".
   Future<void> init() async {
@@ -153,20 +169,44 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> updateUser({
-    required String name,
-    required String email,
-    required String phone,
-    required String address,
-    required double latitude,
-    required double longitude,
-    String? password,
-    File? photo,
-  }) async {
-    // ... implementasi updateUser Anda ...
-    // pastikan untuk saveUser ke storage setelah berhasil
-    await _storageService.saveUser(_user!);
+ Future<User> updateUser({
+  required String name,
+  required String email,
+  required String phone,
+  required String address,
+  required double latitude,
+  required double longitude,
+  String? password,
+  File? photo,
+}) async {
+  if (_token == null) throw Exception("Token tidak tersedia");
+
+  // 1. Update data dasar user
+  final updatedUser = await _apiService.updateUser(
+    token: _token!,
+    name: name,
+    email: email,
+    phone: phone,
+    address: address,
+    latitude: latitude,
+    longitude: longitude,
+    password: password,
+  );
+
+  // 2. Upload foto jika ada
+  User finalUser = updatedUser;
+  if (photo != null) {
+    finalUser = await _apiService.uploadPhoto(_token!, photo);
   }
+
+  // 3. Simpan user baru ke state dan local storage
+  _user = finalUser;
+  await _storageService.saveUser(_user!);
+  notifyListeners();
+
+  return finalUser;
+}
+
 
   // Anda bisa menambahkan fungsi updateUser di sini jika perlu
 }

@@ -29,6 +29,7 @@ class ItemsProvider with ChangeNotifier {
   bool get isLoadingItems => _isLoadingItems;
   bool get isLoadingCategories => _isLoadingCategories;
   bool get hasMoreItems => _hasMoreItems;
+  
 
   // Method untuk mengambil data awal (kategori dan item pertama)
   Future<void> _fetchInitialData() async {
@@ -43,36 +44,30 @@ class ItemsProvider with ChangeNotifier {
     if (_isLoadingCategories) return;
     _isLoadingCategories = true;
 
-    // Pastikan untuk mendapatkan token sebelum memanggil API
-    final token = _authProvider.token; // <--- Mengambil token dari AuthProvider.user
+    final token = _authProvider.token; 
     if (token == null) {
       print('Token autentikasi tidak tersedia untuk memuat kategori item.');
       _isLoadingCategories = false;
       notifyListeners();
-      return; // Keluar jika tidak ada token
+      return; 
     }
 
-    notifyListeners(); // Notifikasi sebelum try-catch
+    notifyListeners(); 
 
     try {
-      // Panggil _apiService.fetchItemCategories() dengan parameter 'token'
       _categories = await _apiService.fetchItemCategories(token: token); // <--- Perbaikan di sini
-      // Tambahkan opsi "All Categories" di awal daftar
-      // Untuk sementara, itemsCount diatur ke 0 karena tidak ada data total item dari API
       _categories.insert(0, ItemCategory(id: 0, name: "All Categories", image: "null", itemsCount: 0));
     } catch (e) {
       print('Error fetching item categories: $e');
-      // Anda bisa set _error state atau tampilkan pesan error lain di sini
     } finally {
       _isLoadingCategories = false;
       notifyListeners();
     }
   }
 
-  // Method untuk mengambil daftar item dengan filter dan pagination
   Future<void> fetchItems({bool reset = false}) async {
-    if (_isLoadingItems) return; // Hindari double fetch
-    if (!_hasMoreItems && !reset) return; // Jika tidak ada lagi item dan bukan reset
+    if (_isLoadingItems) return; 
+    if (!_hasMoreItems && !reset) return; 
 
     if (reset) {
       _currentPage = 1;

@@ -41,7 +41,7 @@ class _WelcomeViewState extends State<WelcomeView> {
                 height: media.width * 0.1,
               ),
               Text(
-                "Jelajahi Restaurant dan pesan menggunakan Kaze Delivery",
+                "Jelajahi Restaurant dan pesan menggunakan Karpel Food Delivery",
                 textAlign: TextAlign.center,
                 style: TextStyle(
                     color: Tcolor.secondaryText,
@@ -54,7 +54,7 @@ class _WelcomeViewState extends State<WelcomeView> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 25),
                 child: RoundButton(
-                  title: "Login",
+                  title: "Masuk",
                   onPressed: () {
                     Navigator.push(
                       context,
@@ -71,7 +71,7 @@ class _WelcomeViewState extends State<WelcomeView> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 25),
                 child: RoundButton(
-                  title: "Create an Account",
+                  title: "Buat Akun",
                   type: RoundButtonType.textPrimary,
                   onPressed: () {
                     Navigator.push(

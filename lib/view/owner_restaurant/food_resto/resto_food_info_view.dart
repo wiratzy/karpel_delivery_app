@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:karpel_food_delivery/cofing.dart';
 import 'package:karpel_food_delivery/common/color_extension.dart';
 import 'package:karpel_food_delivery/models/home_model.dart';
 import 'package:karpel_food_delivery/services/storage_services.dart';
 import 'package:karpel_food_delivery/view/owner_restaurant/food_resto/detail_food_view.dart';
+import 'package:karpel_food_delivery/view/owner_restaurant/restaurant_owner_view.dart';
 import 'package:provider/provider.dart';
 import 'package:karpel_food_delivery/providers/owner_item_provider.dart';
 import 'package:karpel_food_delivery/services/api_services.dart';
+import 'package:skeletonizer/skeletonizer.dart';
+import 'package:intl/intl.dart';
 
 class RestoFoodInfoView extends StatefulWidget {
   const RestoFoodInfoView({super.key});
@@ -16,196 +18,275 @@ class RestoFoodInfoView extends StatefulWidget {
 }
 
 class _RestoFoodInfoViewState extends State<RestoFoodInfoView> {
-  String search = '';
-  int? selectedCategoryId;
+  String _searchQuery = '';
+  int? _selectedCategoryId;
 
-  List<ItemCategory> categories = [];
-  bool isCategoryLoading = false;
+  List<ItemCategory> _categories = [];
+  bool _isCategoryLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _fetchCategories();
-    _fetchData();
+    _fetchInitialData();
+  }
+
+  Future<void> _fetchInitialData() async {
+    // Memuat data kategori dan item secara bersamaan
+    await Future.wait([
+      _fetchCategories(),
+      _fetchItems(),
+    ]);
   }
 
   Future<void> _fetchCategories() async {
-    setState(() => isCategoryLoading = true);
+    if (!mounted) return;
+    setState(() => _isCategoryLoading = true);
     try {
       final token = await StorageService().getToken();
       if (token == null) throw Exception('Token tidak ditemukan');
-
       final result = await ApiService().fetchItemCategories(token: token);
-      setState(() {
-        categories = result;
-      });
+      if (mounted) setState(() => _categories = result);
     } catch (e) {
       print('❌ Gagal ambil kategori: $e');
     } finally {
-      setState(() => isCategoryLoading = false);
+      if (mounted) setState(() => _isCategoryLoading = false);
     }
   }
 
-  Future<void> _fetchData() async {
+  Future<void> _fetchItems() async {
     final token = await StorageService().getToken();
-    if (token == null) return;
-
+    if (token == null || !mounted) return;
     await Provider.of<OwnerItemProvider>(context, listen: false)
-        .fetchItems(token, categoryId: selectedCategoryId);
-  }
-
-   Future<void> _handleRefresh() async {
-    // Memuat ulang kategori dan daftar item secara bersamaan
-    await Future.wait([
-      _fetchCategories(),
-      _fetchData(),
-    ]);
+        .fetchItems(token, categoryId: _selectedCategoryId);
   }
 
   @override
   Widget build(BuildContext context) {
     final itemProvider = Provider.of<OwnerItemProvider>(context);
     final items = itemProvider.items
-        .where((item) => item.name.toLowerCase().contains(search.toLowerCase()))
+        .where((item) => item.name.toLowerCase().contains(_searchQuery.toLowerCase()))
         .toList();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Daftar Menu Restoran',
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Tcolor.primary,
-      ),
+      // Menggunakan CustomScrollView untuk layout yang lebih dinamis
       body: RefreshIndicator(
-        onRefresh: _handleRefresh,
-        child: Column(
-          children: [
-            // 🔍 Search
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Cari Makanan...',
-                  prefixIcon: const Icon(Icons.search),
-                  border:
-                      OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                ),
-                onChanged: (value) {
-                  setState(() {
-                    search = value;
-                  });
-                },
-              ),
-            ),
-        
-            // 📂 Kategori
-            SizedBox(
-              height: 60,
-              child: isCategoryLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: categories.length + 1,
-                      itemBuilder: (context, index) {
-                        if (index == 0) {
-                          return _buildCategoryTab(null, 'Semua');
-                        }
-                        final category = categories[index - 1];
-                        return _buildCategoryTab(category.id, category.name);
-                      },
-                    ),
-            ),
-        
-            const SizedBox(height: 8),
-        
-            // 📋 List Item
-            Expanded(
-              child: itemProvider.isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : items.isEmpty
-                      ? const Center(child: Text('Tidak ada Makanan Yang ditemukan.'))
-                      : ListView.builder(
-                          padding: const EdgeInsets.all(12),
-                          itemCount: items.length,
-                          itemBuilder: (context, index) {
-                            final item = items[index];
-                            return Card(
-                              margin: const EdgeInsets.symmetric(vertical: 8),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              elevation: 3,
-                              child: ListTile(
-                                leading: SizedBox(
-                                  width: 60,
-                                  height: 60,
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Image.network(
-                                      item.image,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                ),
-                                title: Text(item.name),
-                                subtitle: Text(
-                                  '${formatPrice(item.price)}',
-                                  // 'Rp ${item.price != null ? (item.price is num ? (item.price as num).toStringAsFixed(0) : double.tryParse(item.price.toString())?.toStringAsFixed(0) ?? item.price.toString()) : '0'}',
-                                ),
-                                trailing: const Icon(Icons.chevron_right),
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => DetailFoodView(item: item),
-                                    ),
-                                  );
-                                },
-                              ),
-                            );
-                          },
-                        ),
-            ),
-          ],
+        onRefresh: _fetchInitialData,
+        child: Skeletonizer(
+          enabled: itemProvider.isLoading && items.isEmpty,
+          child: CustomScrollView(
+            slivers: [
+              _buildSliverAppBar(),
+              _buildSearchBar(),
+              _buildCategoryChips(),
+              _buildItemList(context, itemProvider, items),
+            ],
+          ),
         ),
       ),
-
-      // ➕ Tombol Tambah
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.pushNamed(context, '/createItem');
+          Navigator.pushNamed(context, '/createItem').then((_) => _fetchItems());
         },
-        child: const Icon(Icons.add),
         backgroundColor: Tcolor.primary,
         foregroundColor: Colors.white,
+        child: const Icon(Icons.add),
       ),
     );
   }
 
-  Widget _buildCategoryTab(int? id, String label) {
-    final isSelected = id == selectedCategoryId;
-    return GestureDetector(
-      onTap: () async {
-        setState(() {
-          selectedCategoryId = id;
-        });
-        await _fetchData();
-      },
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected ? Tcolor.primary : Colors.grey[200],
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.black,
-            fontWeight: FontWeight.w500,
+  SliverAppBar _buildSliverAppBar() {
+    return SliverAppBar(
+      title: const Text('Menu Restoran Saya'),
+      backgroundColor: Tcolor.primary,
+      foregroundColor: Colors.white,
+      pinned: true,
+      floating: true,
+      elevation: 2,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () {
+          Navigator.pushReplacement( // Menggunakan pushReplacement agar tidak menumpuk
+            context,
+            MaterialPageRoute(builder: (context) => const RestaurantOwnerHomeView()),
+          );
+        },
+      ),
+    );
+  }
+
+  SliverToBoxAdapter _buildSearchBar() {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+        child: TextField(
+          decoration: InputDecoration(
+            hintText: 'Cari Makanan...',
+            prefixIcon: const Icon(Icons.search),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(30),
+              borderSide: BorderSide.none,
+            ),
+            filled: true,
+            fillColor: Colors.grey.shade200,
+            contentPadding: EdgeInsets.zero,
           ),
+          onChanged: (value) => setState(() => _searchQuery = value),
         ),
+      ),
+    );
+  }
+
+  SliverToBoxAdapter _buildCategoryChips() {
+    return SliverToBoxAdapter(
+      child: SizedBox(
+        height: 50,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          itemCount: _isCategoryLoading ? 5 : _categories.length + 1,
+          itemBuilder: (context, index) {
+            if (_isCategoryLoading) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4.0),
+                child: Chip(label: Text('Loading...')),
+              );
+            }
+            if (index == 0) {
+              return _buildCategoryChip(null, 'Semua');
+            }
+            final category = _categories[index - 1];
+            return _buildCategoryChip(category.id, category.name);
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryChip(int? id, String label) {
+    final isSelected = id == _selectedCategoryId;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      child: ChoiceChip(
+        label: Text(label),
+        selected: isSelected,
+        onSelected: (selected) {
+          if (selected) {
+            setState(() => _selectedCategoryId = id);
+            _fetchItems();
+          }
+        },
+        selectedColor: Tcolor.primary,
+        labelStyle: TextStyle(
+          color: isSelected ? Colors.white : Colors.black87,
+          fontWeight: FontWeight.bold,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white,
+        side: BorderSide(color: isSelected ? Tcolor.primary : Colors.grey.shade300),
+        showCheckmark: false,
+      ),
+    );
+  }
+
+  Widget _buildItemList(BuildContext context, OwnerItemProvider provider, List<Item> items) {
+    if (items.isEmpty && !provider.isLoading) {
+      return SliverFillRemaining(child: _buildEmptyView());
+    }
+
+    return SliverPadding(
+      padding: const EdgeInsets.all(16),
+      sliver: SliverGrid(
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          mainAxisSpacing: 16,
+          crossAxisSpacing: 16,
+          childAspectRatio: 0.8,
+        ),
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final item = provider.isLoading ? Item.dummy() : items[index];
+            return _buildItemCard(item, provider.isLoading);
+          },
+          childCount: provider.isLoading ? 8 : items.length,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildItemCard(Item item, bool isLoading) {
+    final currencyFormat = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+    return GestureDetector(
+      onTap: isLoading ? null : () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => DetailFoodView(item: item)),
+        ).then((_) => _fetchItems());
+      },
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        elevation: 4,
+        shadowColor: Colors.black.withOpacity(0.1),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(15)),
+                child: Image.network(
+                  item.image,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    color: Colors.grey.shade200,
+                    child: Icon(Icons.fastfood_outlined, size: 40, color: Colors.grey.shade400),
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.name,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    currencyFormat.format(double.tryParse(item.price!) ?? 0),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      color: Tcolor.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyView() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.menu_book_outlined, size: 80, color: Colors.grey.shade400),
+          const SizedBox(height: 16),
+          const Text("Belum Ada Menu", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Text(
+            "Tambahkan menu pertama Anda\ndengan menekan tombol '+' di bawah.",
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+          ),
+        ],
       ),
     );
   }

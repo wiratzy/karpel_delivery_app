@@ -19,61 +19,62 @@ class _LoginViewState extends State<LoginView> {
   final TextEditingController txtPassword = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
- // Di dalam LoginView -> _LoginViewState
+  // Di dalam LoginView -> _LoginViewState
 
-Future<void> _handleLogin() async {
-  if (!(_formKey.currentState?.validate() ?? false)) {
-    return;
-  }
-
-  final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
-  try {
-    await authProvider.login(txtEmail.text, txtPassword.text);
-
-    if (!mounted) return;
-
-    // --- LANGKAH DEBUGGING: TAMBAHKAN PRINT DI SINI ---
-    final user = authProvider.user;
-
-    // Cetak seluruh objek user untuk melihat semua datanya
-    print('DEBUG: Login Berhasil. Data User: ${user?.toJson()}'); 
-    
-    // Cetak role secara spesifik. Tanda kurung siku membantu melihat spasi kosong.
-    print('DEBUG: Mengecek Role Pengguna: [${user?.role}]'); 
-
-    // --- AKHIR LANGKAH DEBUGGING ---
-
-   if (user?.role == 'customer') {
-  Navigator.pushReplacementNamed(context, '/main'); // Atau route khusus customer kamu
-}
- else {
-      switch (user?.role) {
-        case 'admin':
-          print("DEBUG: Role cocok 'admin', mencoba navigasi ke /admin");
-          Navigator.pushReplacementNamed(context, '/admin');
-          break;
-        case 'restaurant_owner':
-          print("DEBUG: Role cocok 'restaurant_owner', mencoba navigasi ke /restaurantOwner");
-          Navigator.pushReplacementNamed(context, '/restaurantOwner');
-          break;
-        case 'driver':
-          print("DEBUG: Role cocok 'driver', mencoba navigasi ke /driver");
-          Navigator.pushReplacementNamed(context, '/driver');
-          break;
-        default:
-          // Ini akan dieksekusi jika role-nya null atau tidak cocok sama sekali
-          print("DEBUG: Role tidak cocok, navigasi ke /main sebagai default");
-          Navigator.pushReplacementNamed(context, '/main');
-      }
+  Future<void> _handleLogin() async {
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      return;
     }
-  } catch (e) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Login Gagal: ${e.toString()}')),
-    );
+
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+    try {
+      await authProvider.login(txtEmail.text, txtPassword.text);
+
+      if (!mounted) return;
+
+      // --- LANGKAH DEBUGGING: TAMBAHKAN PRINT DI SINI ---
+      final user = authProvider.user;
+
+      // Cetak seluruh objek user untuk melihat semua datanya
+      print('DEBUG: Login Berhasil. Data User: ${user?.toJson()}');
+
+      // Cetak role secara spesifik. Tanda kurung siku membantu melihat spasi kosong.
+      print('DEBUG: Mengecek Role Pengguna: [${user?.role}]');
+
+      // --- AKHIR LANGKAH DEBUGGING ---
+
+      if (user?.role == 'customer') {
+        Navigator.pushReplacementNamed(
+            context, '/main'); // Atau route khusus customer kamu
+      } else {
+        switch (user?.role) {
+          case 'admin':
+            print("DEBUG: Role cocok 'admin', mencoba navigasi ke /admin");
+            Navigator.pushReplacementNamed(context, '/admin');
+            break;
+          case 'owner':
+            print(
+                "DEBUG: Role cocok 'restaurant_owner', mencoba navigasi ke /restaurantOwner");
+            Navigator.pushReplacementNamed(context, '/restaurantOwner');
+            break;
+          case 'driver':
+            print("DEBUG: Role cocok 'driver', mencoba navigasi ke /driver");
+            Navigator.pushReplacementNamed(context, '/driver');
+            break;
+          default:
+            // Ini akan dieksekusi jika role-nya null atau tidak cocok sama sekali
+            print("DEBUG: Role tidak cocok, navigasi ke /main sebagai default");
+            Navigator.pushReplacementNamed(context, '/main');
+        }
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Login Gagal: Email atau Password salah Silahkan coba lagi')),
+      );
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -109,7 +110,7 @@ Future<void> _handleLogin() async {
                 children: [
                   const SizedBox(height: 64),
                   Text(
-                    "Login",
+                    "Masuk",
                     style: TextStyle(
                       color: Tcolor.primaryText,
                       fontSize: 30,
@@ -117,7 +118,7 @@ Future<void> _handleLogin() async {
                     ),
                   ),
                   Text(
-                    "Add your details to login",
+                    "Masukkan Email Dan Password Anda",
                     style: TextStyle(
                       color: Tcolor.secondaryText,
                       fontSize: 14,
@@ -143,7 +144,7 @@ Future<void> _handleLogin() async {
                   RoundTextfield(
                     hintText: "Password",
                     controller: txtPassword,
-                    obscureText: true,
+                    obscureText: true, 
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Password tidak boleh kosong';
@@ -155,43 +156,17 @@ Future<void> _handleLogin() async {
                   Consumer<AuthProvider>(
                     builder: (context, auth, child) {
                       return RoundButton(
-                        title: auth.isLoading ? "Loading..." : "Login",
+                        title: auth.isLoading ? "Tunggu Sebentar..." : "Masuk",
                         // PERBAIKAN DI SINI
-                        onPressed: auth.isLoading ? null : () {
-                          _handleLogin();
-                        },
+                        onPressed: auth.isLoading
+                            ? null
+                            : () {
+                                _handleLogin();
+                              },
                       );
                     },
-                  ),
-                  const SizedBox(height: 4),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ResetPasswordView(),
-                        ),
-                      );
-                    },
-                    child: Text(
-                      "Forgot Password ?",
-                      style: TextStyle(
-                        color: Tcolor.secondaryText,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
                   ),
                   const SizedBox(height: 30),
-                  Text(
-                    "or Login With",
-                    style: TextStyle(
-                      color: Tcolor.secondaryText,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 50),
                   TextButton(
                     onPressed: () {
                       Navigator.pushNamed(context, '/signup');
@@ -200,15 +175,15 @@ Future<void> _handleLogin() async {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          "Don't Have Account? ",
+                          "Belum Mempunyai Akun? ",
                           style: TextStyle(
                             color: Tcolor.secondaryText,
-                            fontSize: 14,
+                            fontSize: 12,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                         Text(
-                          "Sign Up",
+                          "Daftar Sekarang",
                           style: TextStyle(
                             color: Tcolor.primary,
                             fontSize: 14,

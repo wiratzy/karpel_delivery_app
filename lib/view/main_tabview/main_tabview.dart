@@ -79,6 +79,8 @@ class _MainTabViewState extends State<MainTabView> {
         await _onWillPop();
       },
       child: Scaffold(
+        resizeToAvoidBottomInset: false,
+
         body: IndexedStack(
           index: _selectedIndex,
           children: _pages,

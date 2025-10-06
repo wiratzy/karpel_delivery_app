@@ -7,8 +7,6 @@ import 'package:karpel_food_delivery/providers/item_provider.dart';
 import 'package:karpel_food_delivery/providers/order_provider.dart';
 import 'package:karpel_food_delivery/providers/auth_provider.dart';
 import 'package:karpel_food_delivery/view/more/customer_detail_view.dart';
-import 'package:karpel_food_delivery/view/more/my_order_view.dart';
-import 'package:karpel_food_delivery/view/more/my_orders_view.dart';
 import 'package:karpel_food_delivery/view/more/pick_location_view.dart';
 import 'package:provider/provider.dart';
 
@@ -299,19 +297,18 @@ class _CheckoutViewState extends State<CheckoutView> {
                     try {
                       final result = await orderProvider.checkoutOrder(
                           token, orderRequest);
+                      if (!mounted) return;
 
                       cartProvider.clearCart(token);
 
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content: Text(
-                                "Pesanan berhasil dibuat! ID: ${result['order_id']}")),
+                        SnackBar(content: Text("Pesanan berhasil dibuat! ")),
                       );
 
                       Navigator.of(context).pushReplacement(
                         MaterialPageRoute(
-                          builder: (_) =>
-                              CustomerDetailView(orderId: result['order_id']),
+                          builder: (_) => CustomerDetailView(
+                              orderId: result['order_id'], orderSequence: 1),
                         ),
                       );
                     } catch (e) {

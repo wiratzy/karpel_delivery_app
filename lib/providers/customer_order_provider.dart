@@ -64,6 +64,7 @@ class CustomerOrderProvider extends ChangeNotifier {
     String status, {
     int? restaurantRating,
     int? itemRating,
+    String? reviewText,
   }) async {
     await _apiService.updateCustomerOrderStatus(
       token,
@@ -71,6 +72,7 @@ class CustomerOrderProvider extends ChangeNotifier {
       status,
       restaurantRating: restaurantRating,
       itemRating: itemRating,
+      reviewText: reviewText,
     );
   }
 }

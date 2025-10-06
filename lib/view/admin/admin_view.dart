@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:karpel_food_delivery/common/color_extension.dart';
-import 'package:karpel_food_delivery/providers/auth_provider.dart';
+// import yang diperlukan
 import 'package:karpel_food_delivery/view/admin/account/customer_view.dart';
+import 'package:karpel_food_delivery/view/admin/admin_restaurant_application_view.dart';
+import 'package:karpel_food_delivery/view/admin/item_category/admin_item_category_view.dart';
+import 'package:karpel_food_delivery/view/admin/resto/admin_restaurant_list_view.dart';
 import 'package:provider/provider.dart';
+import 'package:karpel_food_delivery/providers/auth_provider.dart';
 
 class AdminView extends StatelessWidget {
   const AdminView({super.key});
@@ -22,7 +26,8 @@ class AdminView extends StatelessWidget {
           TextButton(
             onPressed: () async {
               await auth.logout();
-              Navigator.pushReplacementNamed(context, '/welcome');
+              // Menggunakan pushNamedAndRemoveUntil untuk membersihkan stack navigasi
+              Navigator.pushNamedAndRemoveUntil(context, '/welcome', (route) => false);
             },
             child: const Text('Ya'),
           ),
@@ -34,8 +39,6 @@ class AdminView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var media = MediaQuery.of(context).size;
-
     return WillPopScope(
       onWillPop: () => _onWillPop(context),
       child: Scaffold(
@@ -63,17 +66,15 @@ class AdminView extends StatelessWidget {
                     crossAxisCount: 2,
                     crossAxisSpacing: 15,
                     mainAxisSpacing: 15,
-                    childAspectRatio: 1.0,
+                    childAspectRatio: 1.1,
                     children: [
                       // Customer Button
                       _buildDashboardButton(
                         context,
                         title: 'Customer',
-                        iconPath:
-                            'assets/img/icon_person.png', // Ganti dengan path ikon yang sesuai
+                        icon: Icons.people_alt, // Menggunakan Icon bawaan
                         color: Tcolor.primary,
                         onTap: () {
-                          // Tambahkan aksi untuk Customer (misalnya navigasi ke halaman Customer)
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -86,81 +87,83 @@ class AdminView extends StatelessWidget {
                       _buildDashboardButton(
                         context,
                         title: 'Resto',
-                        iconPath:
-                            'assets/img/icon_store.png', // Ganti dengan path ikon yang sesuai
+                        icon: Icons.store, // Menggunakan Icon bawaan
                         color: Tcolor.placeholder,
                         onTap: () {
-                          // Tambahkan aksi untuk Resto
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Navigasi ke Resto')),
-                          );
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const AdminRestaurantListView()));
                         },
                       ),
-                      // Courier Button
+                      // Kategori Makanan Button
                       _buildDashboardButton(
                         context,
-                        title: 'Courier',
-                        iconPath:
-                            'assets/img/icon_bike.png', // Ganti dengan path ikon yang sesuai
+                        title: 'Kategori Makanan',
+                        icon: Icons.category, // Menggunakan Icon bawaan
                         color: Tcolor.placeholder,
                         onTap: () {
-                          // Tambahkan aksi untuk Courier
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Navigasi ke Courier')),
-                          );
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const AdminItemCategoryView()));
                         },
                       ),
-                      // Transaction Button
+                      // Pengajuan Restoran Button
                       _buildDashboardButton(
                         context,
-                        title: 'Transaction',
-                        iconPath:
-                            'assets/img/icon_document.png', // Ganti dengan path ikon yang sesuai
+                        title: 'Pengajuan Restoran',
+                        icon: Icons.edit_note, // Menggunakan Icon bawaan (atau icons.restaurant_menu)
                         color: Tcolor.primary,
                         onTap: () {
-                          // Tambahkan aksi untuk Transaction
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text('Navigasi ke Transaction')),
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const AdminRestaurantApplicationListView()));
+                        },
+                      ),
+                      // Logout Button
+                      _buildDashboardButton(
+                        context,
+                        title: 'Logout',
+                        icon: Icons.logout, // Menggunakan Icon bawaan
+                        color: Tcolor.secondaryText,
+                        onTap: () async {
+                          final auth = Provider.of<AuthProvider>(context, listen: false);
+                          final shouldLogout = await showDialog<bool>(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Konfirmasi Logout'),
+                              content:
+                                  const Text('Apakah kamu yakin ingin logout?'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context, false),
+                                  child: const Text('Batal'),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: const Text('Logout'),
+                                ),
+                              ],
+                            ),
                           );
+
+                          if (shouldLogout == true) {
+                            await auth.logout();
+                            if (context.mounted) {
+                              Navigator.pushNamedAndRemoveUntil(
+                                  context, '/welcome', (route) => false);
+                            }
+                          }
                         },
                       ),
                     ],
                   ),
-                ),
-              ),
-              // Footer (Tombol Bundar)
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
-                color: Tcolor.white,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildFooterButton(
-                      iconPath:
-                          'assets/img/icon_home.png', // Ganti dengan path ikon yang sesuai
-                      color: Tcolor.primary,
-                      onTap: () {
-                        // Tambahkan aksi untuk Home
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Kembali ke Home')),
-                        );
-                      },
-                    ),
-                    _buildFooterButton(
-                      iconPath:
-                          'assets/img/icon_settings.png', // Ganti dengan path ikon yang sesuai
-                      color: Tcolor.placeholder,
-                      onTap: () {
-                        // Tambahkan aksi untuk Settings
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Buka Settings')),
-                        );
-                      },
-                    ),
-                  ],
                 ),
               ),
             ],
@@ -174,7 +177,7 @@ class AdminView extends StatelessWidget {
   Widget _buildDashboardButton(
     BuildContext context, {
     required String title,
-    required String iconPath,
+    required IconData icon, // <-- Berubah dari iconPath (String) menjadi icon (IconData)
     required Color color,
     required VoidCallback onTap,
   }) {
@@ -193,54 +196,33 @@ class AdminView extends StatelessWidget {
             ),
           ],
         ),
+        padding: const EdgeInsets.all(8.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Image.asset(
-              iconPath,
-              width: 40,
-              height: 40,
-              color:
-                  color == Tcolor.primary ? Tcolor.white : Tcolor.primaryText,
+            Icon( // <-- Menggunakan widget Icon
+              icon, // Menggunakan parameter icon (IconData)
+              size: 40,
+              color: color == Tcolor.primary || color == Tcolor.secondaryText
+                  ? Tcolor.white
+                  : Tcolor.primaryText,
             ),
             const SizedBox(height: 10),
             Text(
               title,
+              textAlign: TextAlign.center,
               style: TextStyle(
-                color:
-                    color == Tcolor.primary ? Tcolor.white : Tcolor.primaryText,
-                fontSize: 16,
+                color: color == Tcolor.primary || color == Tcolor.secondaryText
+                    ? Tcolor.white
+                    : Tcolor.primaryText,
+                fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  // Widget untuk tombol footer (bundar)
-  Widget _buildFooterButton({
-    required String iconPath,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: color,
-          shape: BoxShape.circle,
-        ),
-        child: Center(
-          child: Image.asset(
-            iconPath,
-            width: 20,
-            height: 20,
-            color: color == Tcolor.primary ? Tcolor.white : Tcolor.primaryText,
-          ),
         ),
       ),
     );

@@ -2,14 +2,19 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:karpel_food_delivery/models/admin_item_category_model.dart';
+import 'package:karpel_food_delivery/models/admin_restaurant_model.dart';
+import 'package:karpel_food_delivery/models/customer_restaurant_detail_model.dart';
+import 'package:karpel_food_delivery/models/customer_restaurant_model.dart';
 import 'package:karpel_food_delivery/models/driver_model.dart';
 import 'package:karpel_food_delivery/models/home_model.dart';
+import 'package:karpel_food_delivery/models/restaurant_aplication.dart';
 import 'package:karpel_food_delivery/models/user_model.dart';
 
 class ApiService {
   // static const String baseUrl = 'http://192.168.239.220:8000/api';
-  // static const String baseUrl = 'http://192.168.1.116:8000/api';
-  static const String baseUrl = 'http://202.155.132.96/api';
+  static const String baseUrl = 'http://172.20.10.5:8000/api';
+  // static const String baseUrl = 'http://192.168.1.120:8000/api';
 
   Future<Map<String, dynamic>> login(String email, String password) async {
     final response = await http.post(
@@ -126,27 +131,95 @@ class ApiService {
     }
   }
 
-  Future<List<User>> getAllUsers(String token) async {
+  Future<User> fetchUser({required String token}) async {
     final response = await http.get(
-      Uri.parse(
-          '$baseUrl/users/customer'), // Asumsikan endpoint untuk semua user
+      Uri.parse('$baseUrl/user'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      return User.fromJson(jsonDecode(response.body)['user']);
+    } else {
+      throw Exception('Gagal mengambil data user: ${response.body}');
+    }
+  }
+
+  Future<List<User>> getAllUsers(String token) async {
+    // Pastikan endpoint ini benar sesuai dengan rute API admin Anda
+    final response = await http.get(
+      Uri.parse('$baseUrl/users/customer'), // Ganti jika endpoint Anda berbeda
       headers: {
-        'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
       },
     );
+
     if (response.statusCode == 200) {
+      // Kode ini mengharapkan Map, bukan List
+      print(response.statusCode);
       final Map<String, dynamic> data = jsonDecode(response.body);
+
       if (data['success'] == true) {
+        // Mengambil list dari dalam key 'users'
         return (data['users'] as List)
             .map((json) => User.fromJson(json))
-            .where((user) => user.role.toLowerCase() == 'customer')
             .toList();
       } else {
-        throw Exception('Failed to load users: ${data['message']}');
+        throw Exception('Gagal memuat pengguna: ${data['message']}');
       }
     } else {
-      throw Exception('Failed to load users: ${response.statusCode}');
+      throw Exception('Gagal memuat pengguna: ${response.statusCode}');
+    }
+  }
+
+  Future<void> deleteUser(String token, int userId) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/users/customer/$userId'), // Sesuaikan endpoint
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      },
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      print('Error deleting user: ${response.body}');
+      throw Exception(
+          'Gagal menghapus pengguna. Status: ${response.statusCode}');
+    }
+  }
+
+  // Method untuk mengupdate user oleh admin
+  Future<User> updateUserByAdmin({
+    required String token,
+    required int userId,
+    required String name,
+    required String email,
+    required String phone,
+    required String address,
+    required String role,
+  }) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/users/customer/$userId'), // Sesuaikan endpoint
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'name': name,
+        'email': email,
+        'phone': phone,
+        'address': address,
+        'role': role,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      return User.fromJson(jsonDecode(response.body)['user']);
+    } else {
+      print('Error updating user: ${response.body}');
+      throw Exception(
+          'Gagal memperbarui pengguna. Status: ${response.statusCode}');
     }
   }
 
@@ -607,34 +680,36 @@ class ApiService {
   }
 
   Future<void> updateCustomerOrderStatus(
-  String token,
-  int orderId,
-  String status, {
-  int? restaurantRating,
-  int? itemRating,
-}) async {
-  final url = Uri.parse('$baseUrl/user/orders/$orderId/status');
-  
-  final body = {
-    'status': status,
-    if (restaurantRating != null) 'restaurant_rating': restaurantRating,
-    if (itemRating != null) 'item_rating': itemRating,
-  };
+    String token,
+    int orderId,
+    String status, {
+    int? restaurantRating,
+    int? itemRating,
+    String? reviewText,
+  }) async {
+    final url = Uri.parse('$baseUrl/user/orders/$orderId/status');
 
-  final response = await http.put(
-    url,
-    headers: {
-      'Authorization': 'Bearer $token',
-      'Content-Type': 'application/json',
-    },
-    body: jsonEncode(body),
-  );
+    final body = {
+      'status': status,
+      if (restaurantRating != null) 'restaurant_rating': restaurantRating,
+      if (itemRating != null) 'item_rating': itemRating,
+          if (reviewText != null && reviewText.isNotEmpty) 'review_text': reviewText, // ✅ tambahin ini
 
-  if (response.statusCode != 200) {
-    throw Exception('Gagal update status: ${response.body}');
+    };
+
+    final response = await http.put(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Gagal update status: ${response.body}');
+    }
   }
-}
-
 
 // services/api_service.dart
   Future<void> assignDriverToOrder({
@@ -814,6 +889,376 @@ class ApiService {
 
     if (response.statusCode != 200) {
       throw Exception('Gagal menghapus item: ${response.body}');
+    }
+  }
+
+  Future<List<Driver>> fetchDrivers(String token) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/restaurants/drivers'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return (data['data'] as List).map((e) => Driver.fromJson(e)).toList();
+    } else {
+      throw Exception('Gagal mengambil driver');
+    }
+  }
+
+  Future<Driver> createDriver(String token, Map<String, dynamic> body) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/restaurants/drivers'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json'
+      },
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return Driver.fromJson(jsonDecode(response.body)['data']);
+    } else {
+      throw Exception('Gagal menambahkan driver');
+    }
+  }
+
+  Future<Driver> updateDriver(
+      String token, int id, Map<String, dynamic> body) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/restaurants/drivers/$id'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json'
+      },
+      body: jsonEncode(body),
+    );
+
+    if (response.statusCode == 200) {
+      return Driver.fromJson(jsonDecode(response.body)['data']);
+    } else {
+      throw Exception('Gagal mengupdate driver');
+    }
+  }
+
+  Future<void> deleteDriver(String token, int id) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/restaurants/drivers/$id'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Gagal menghapus driver');
+    }
+  }
+
+   Future<List<AdminRestaurant>> fetchAdminRestaurants(String token) async {
+    final response = await http.get(
+      Uri.parse("$baseUrl/admin/restaurants"),
+      headers: {"Authorization": "Bearer $token"},
+    );
+    print('Response Status: ${response.statusCode}');
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      // Perbaikan di sini: Akses data['data']['data']
+      return (data['data']['data'] as List) // <-- Perbaikan kunci 'data'
+          .map((e) => AdminRestaurant.fromJson(e))
+          .toList();
+    } else {
+      throw Exception("Gagal memuat daftar restoran: ${response.statusCode} ${response.body}");
+    }
+  }
+
+  Future<AdminRestaurant> fetchAdminRestaurantById(String token, int id) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/admin/restaurants/$id'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      // Pastikan struktur respons juga di sini jika detail juga ada 'data' wrapper
+      // Laravel show method untuk single resource biasanya langsung mengembalikan resource atau resource dalam 'data'
+      final data = jsonDecode(response.body);
+      return AdminRestaurant.fromJson(data['data']); // Asumsi data single resource ada di 'data'
+    } else {
+      throw Exception('Gagal mengambil detail restoran: ${response.statusCode} ${response.body}');
+    }
+  }
+
+  Future<void> createAdminRestaurant(
+    String token,
+    Map<String, String> fields,
+    File? imagePath,
+  ) async {
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse("$baseUrl/admin/restaurants"),
+    );
+    request.headers['Authorization'] = 'Bearer $token';
+    request.fields.addAll(fields);
+
+    if (imagePath != null) {
+      request.files
+          .add(await http.MultipartFile.fromPath('image', imagePath.path));
+    }
+
+    final response = await request.send();
+    final responseBody = await response.stream.bytesToString(); // Tangkap body untuk debugging
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Gagal menambahkan restoran: ${response.statusCode} $responseBody');
+    }
+    print('Create Restaurant Success: $responseBody'); // Debugging sukses
+  }
+
+  Future<void> updateAdminRestaurant(
+    String token,
+    int id,
+    Map<String, String> fields,
+    File? imagePath,
+  ) async {
+    var request = http.MultipartRequest(
+      'POST', // Tetap POST, tapi pakai _method=PUT
+      Uri.parse("$baseUrl/admin/restaurants/$id?_method=PUT"),
+    );
+    request.headers['Authorization'] = 'Bearer $token';
+    request.fields.addAll(fields);
+
+    if (imagePath != null) {
+      request.files
+          .add(await http.MultipartFile.fromPath('image', imagePath.path));
+    }
+
+    final response = await request.send();
+    final responseBody = await response.stream.bytesToString(); // Tangkap body untuk debugging
+
+    if (response.statusCode != 200) {
+      throw Exception('Gagal memperbarui restoran: ${response.statusCode} $responseBody');
+    }
+    print('Update Restaurant Success: $responseBody'); // Debugging sukses
+  }
+
+  Future<void> deleteAdminRestaurant(String token, int id) async {
+    final response = await http.delete(
+      Uri.parse("$baseUrl/admin/restaurants/$id"),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Gagal menghapus restoran: ${response.statusCode} ${response.body}');
+    }
+    print('Delete Restaurant Success: ${response.body}'); // Debugging sukses
+  }
+
+  Future<List<AdminItemCategory>> fetchAdminItemCategories(String token) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/admin-item-categories'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return (data['data'] as List)
+          .map((e) => AdminItemCategory.fromJson(e))
+          .toList();
+    } else {
+      throw Exception('Gagal memuat kategori item');
+    }
+  }
+
+  // POST: Create new category with image (multipart)
+  Future<void> createAdminItemCategory(
+      String token, Map<String, String> fields, File? image) async {
+    final uri = Uri.parse('$baseUrl/admin-item-categories');
+    final request = http.MultipartRequest('POST', uri);
+    request.headers['Authorization'] = 'Bearer $token';
+
+    fields.forEach((key, value) => request.fields[key] = value);
+
+    if (image != null) {
+      request.files.add(await http.MultipartFile.fromPath('image', image.path));
+    }
+
+    final response = await request.send();
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Gagal menambah kategori');
+    }
+  }
+
+  // PUT: Update existing category with image
+  Future<void> updateAdminItemCategory(
+      String token, int id, Map<String, String> fields, File? image) async {
+    final uri = Uri.parse('$baseUrl/admin-item-categories/$id');
+    final request = http.MultipartRequest('POST', uri)
+      ..headers['Authorization'] = 'Bearer $token'
+      ..fields['_method'] = 'PUT';
+
+    fields.forEach((key, value) => request.fields[key] = value);
+
+    if (image != null) {
+      request.files.add(await http.MultipartFile.fromPath('image', image.path));
+    }
+
+    final response = await request.send();
+
+    if (response.statusCode != 200) {
+      throw Exception('Gagal mengubah kategori');
+    }
+  }
+
+  // DELETE
+  Future<void> deleteAdminItemCategory(String token, int id) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/admin-item-categories/$id'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Gagal menghapus kategori');
+    }
+  }
+
+  Future<List<CustomerRestaurant>> fetchCustomerRestaurants(
+    String token, {
+    String? search,
+    int? rate,
+  }) async {
+    try {
+      final queryParameters = <String, String>{};
+      if (search != null && search.isNotEmpty) {
+        queryParameters['search'] = search;
+      }
+      if (rate != null) {
+        queryParameters['rate'] = rate.toString();
+      }
+
+      final uri = Uri.parse('$baseUrl/user/restaurants')
+          .replace(queryParameters: queryParameters);
+
+      final response = await http.get(
+        uri,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Accept': 'application/json',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final jsonData = json.decode(response.body);
+        final List data = jsonData['data'];
+        return data.map((r) => CustomerRestaurant.fromJson(r)).toList();
+      } else {
+        throw Exception('Gagal memuat daftar restoran');
+      }
+    } catch (e) {
+      throw Exception('fetchCustomerRestaurants error: $e');
+    }
+  }
+
+  Future<CustomerRestaurantDetail> fetchCustomerRestaurantDetail(
+      String token, int restaurantId) async {
+    final url = Uri.parse('$baseUrl/user/restaurants/$restaurantId');
+    final response = await http.get(
+      url,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      },
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && data['success'] == true) {
+      return CustomerRestaurantDetail.fromJson(data['data']);
+    } else {
+      throw Exception(
+          "fetchCustomerRestaurantDetail error: ${data['message'] ?? response.body}");
+    }
+  }
+
+ Future<List<RestaurantApplication>> fetchRestaurantApplications(
+  String token, {
+  int page = 1,
+  int limit = 10,
+  String? statusFilter
+}) async {
+
+   Map<String, String> queryParams = {
+      'page': page.toString(),
+      'limit': limit.toString(),
+    };
+
+    if (statusFilter != null && statusFilter.isNotEmpty && statusFilter != 'all') {
+      queryParams['status'] = statusFilter; 
+    }
+
+        final uri = Uri.parse('$baseUrl/admin/restaurant-applications').replace(queryParameters: queryParams);
+
+  final response = await http.get(
+      uri, 
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      },
+    );
+
+  final data = jsonDecode(response.body);
+
+  if (response.statusCode == 200 && data['success'] == true) {
+      final List<dynamic> apps = data['data']['data']; 
+      print('Fetched ${apps.length} restaurant applications for status: $statusFilter'); // Debugging print
+      print('URL called: $uri'); // Debugging print
+
+      return apps.map((e) => RestaurantApplication.fromJson(e)).toList();
+    } else {
+      throw Exception(
+        "fetchRestaurantApplications error: ${data['message'] ?? response.body}");
+    }
+}
+
+
+    Future<bool> confirmRestaurantApplication(int id, String token) async {
+    final uri = Uri.parse('$baseUrl/admin/restaurant-applications/$id/approve');
+
+    final response = await http.post(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      },
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && data['success'] == true) {
+      print("Application $id confirmed successfully.");
+      return true;
+    } else {
+      throw Exception(
+          "Failed to confirm application ${id}: ${data['message'] ?? response.body}");
+    }
+  }
+
+  // --- Metode baru untuk menolak pengajuan ---
+  Future<bool> rejectRestaurantApplication(int id, String token) async {
+    final uri = Uri.parse('$baseUrl/admin/restaurant-applications/$id/reject');
+
+    final response = await http.post(
+      uri,
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      },
+    );
+
+    final data = jsonDecode(response.body);
+
+    if (response.statusCode == 200 && data['success'] == true) {
+      print("Application $id rejected successfully.");
+      return true;
+    } else {
+      throw Exception(
+          "Failed to reject application ${id}: ${data['message'] ?? response.body}");
     }
   }
 }

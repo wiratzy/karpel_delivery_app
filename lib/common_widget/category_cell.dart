@@ -23,17 +23,14 @@ class CategoryCell extends StatelessWidget {
                 width: 85,
                 height: 85,
                 fit: BoxFit.cover,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return Center(child: CircularProgressIndicator());
-                },
                 errorBuilder: (context, error, stackTrace) {
                   print('Image load error for ${cObj.name}: $error');
-                  return Image.asset(
-                    'assets/img/default_category.png', // Pastikan aset ini ada
-                    width: 85,
-                    height: 85,
-                    fit: BoxFit.cover,
+                  return const Icon(
+                    Icons.broken_image, // Ikon standar untuk gambar rusak
+                    color: Colors
+                        .grey, // Beri warna abu-abu agar terlihat seperti placeholder
+                    size:
+                        85, // Sesuaikan ukurannya agar sama dengan gambar asli
                   );
                 },
               ),

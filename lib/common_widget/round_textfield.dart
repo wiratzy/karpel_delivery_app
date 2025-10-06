@@ -1,52 +1,74 @@
-// common_widget/round_textfield.dart
-
 import 'package:flutter/material.dart';
 import 'package:karpel_food_delivery/common/color_extension.dart';
 
-class RoundTextfield extends StatelessWidget {
+class RoundTextfield extends StatefulWidget {
   final TextEditingController? controller;
   final String hintText;
   final TextInputType? keyboardType;
   final bool obscureText;
   final Color? bgColor;
-
   final Widget? left;
-    final FocusNode? focusNode; // <--- Tambahkan ini
+  final FocusNode? focusNode;
   final String? Function(String?)? validator;
 
+  const RoundTextfield({
+    super.key,
+    required this.hintText,
+    this.controller,
+    this.keyboardType,
+    this.bgColor,
+    this.left,
+    this.focusNode,
+    this.obscureText = false,
+    this.validator,
+  });
 
-  const RoundTextfield(
-      {super.key,
-      required this.hintText,
-      this.controller,
-      this.keyboardType,
-      this.bgColor, 
-      this.left,
-       this.focusNode,
-      this.obscureText = false,
-      this.validator});
+  @override
+  State<RoundTextfield> createState() => _RoundTextfieldState();
+}
+
+class _RoundTextfieldState extends State<RoundTextfield> {
+  late bool _isObscure;
+
+  @override
+  void initState() {
+    super.initState();
+    _isObscure = widget.obscureText;
+  }
 
   @override
   Widget build(BuildContext context) {
-    // GANTI TextField MENJADI TextFormField
     return TextFormField(
-      controller: controller,
-      obscureText: obscureText,
-      keyboardType: keyboardType,
-      // TAMBAHKAN INI: Gunakan validator yang diberikan
-      validator: validator,
-      autovalidateMode: AutovalidateMode.onUserInteraction, // Validasi saat pengguna mengetik
+      controller: widget.controller,
+      obscureText: _isObscure,
+      keyboardType: widget.keyboardType,
+      validator: widget.validator,
+      focusNode: widget.focusNode,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
       decoration: InputDecoration(
         contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 25),
         filled: true,
-        fillColor: bgColor ?? Tcolor.textfield,
-        hintText: hintText,
+        fillColor: widget.bgColor ?? Tcolor.textfield,
+        hintText: widget.hintText,
         hintStyle: TextStyle(
           color: Tcolor.placeholder,
           fontSize: 14,
           fontWeight: FontWeight.w500,
         ),
-        prefixIcon: left,
+        prefixIcon: widget.left,
+        suffixIcon: widget.obscureText
+            ? IconButton(
+                icon: Icon(
+                  _isObscure ? Icons.visibility_off : Icons.visibility,
+                  color: Colors.grey,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _isObscure = !_isObscure;
+                  });
+                },
+              )
+            : null,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(25.0),
           borderSide: BorderSide.none,
@@ -64,7 +86,7 @@ class RoundTextfield extends StatelessWidget {
   }
 }
 
-class RoundTitleTextfield extends StatelessWidget {
+class RoundTitleTextfield extends StatefulWidget {
   final TextEditingController? controller;
   final String title;
   final String hintText;
@@ -73,54 +95,79 @@ class RoundTitleTextfield extends StatelessWidget {
   final Color? bgColor;
   final Widget? left;
 
-  const RoundTitleTextfield(
-      {super.key,
-      required this.title,
-      required this.hintText,
-      this.controller,
-      this.keyboardType,
-      this.bgColor,
-      this.left,
-      this.obscureText = false});
+  const RoundTitleTextfield({
+    super.key,
+    required this.title,
+    required this.hintText,
+    this.controller,
+    this.keyboardType,
+    this.bgColor,
+    this.left,
+    this.obscureText = false,
+  });
+
+  @override
+  State<RoundTitleTextfield> createState() => _RoundTitleTextfieldState();
+}
+
+class _RoundTitleTextfieldState extends State<RoundTitleTextfield> {
+  late bool _isObscure;
+
+  @override
+  void initState() {
+    super.initState();
+    _isObscure = widget.obscureText;
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       height: 55,
       decoration: BoxDecoration(
-          color: bgColor ?? Tcolor.textfield,
-          borderRadius: BorderRadius.circular(25)),
+        color: widget.bgColor ?? Tcolor.textfield,
+        borderRadius: BorderRadius.circular(25),
+      ),
       child: Row(
         children: [
-          if (left != null)
+          if (widget.left != null)
             Padding(
-              padding: const EdgeInsets.only(
-                left: 15,
-              ),
-              child: left!,
+              padding: const EdgeInsets.only(left: 15),
+              child: widget.left!,
             ),
           Expanded(
             child: Stack(
               children: [
                 Container(
                   height: 55,
-                  margin: const EdgeInsets.only(top: 8,),
+                  margin: const EdgeInsets.only(top: 8),
                   alignment: Alignment.topLeft,
                   child: TextField(
-                    autocorrect: false,
-                    controller: controller,
-                    obscureText: obscureText,
-                    keyboardType: keyboardType,
+                    controller: widget.controller,
+                    obscureText: _isObscure,
+                    keyboardType: widget.keyboardType,
                     decoration: InputDecoration(
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 20),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20),
                       enabledBorder: InputBorder.none,
                       focusedBorder: InputBorder.none,
-                      hintText: hintText,
+                      hintText: widget.hintText,
                       hintStyle: TextStyle(
-                          color: Tcolor.placeholder,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500),
+                        color: Tcolor.placeholder,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      suffixIcon: widget.obscureText
+                          ? IconButton(
+                              icon: Icon(
+                                _isObscure ? Icons.visibility_off : Icons.visibility,
+                                color: Colors.grey,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _isObscure = !_isObscure;
+                                });
+                              },
+                            )
+                          : null,
                     ),
                   ),
                 ),
@@ -129,10 +176,10 @@ class RoundTitleTextfield extends StatelessWidget {
                   margin: const EdgeInsets.only(top: 10, left: 20),
                   alignment: Alignment.topLeft,
                   child: Text(
-                    title,
+                    widget.title,
                     style: TextStyle(color: Tcolor.placeholder, fontSize: 11),
                   ),
-                )
+                ),
               ],
             ),
           ),

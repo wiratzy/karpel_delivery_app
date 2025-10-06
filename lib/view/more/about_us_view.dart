@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:karpel_food_delivery/common/color_extension.dart';
 import 'package:karpel_food_delivery/view/more/my_order_view.dart';
 
-
 class AboutUsView extends StatefulWidget {
   const AboutUsView({super.key});
 
@@ -12,11 +11,7 @@ class AboutUsView extends StatefulWidget {
 
 class _AboutUsViewState extends State<AboutUsView> {
   List aboutTextArr = [
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+    "KarPel Food Delivery lahir dari sebuah riset mendalam di Wilayah Karangampel , di mana penulis/pengembang melihat potensi luar biasa dari UMKM kuliner di wilayah Karangampel. penulis menyadari bahwa banyak pelaku usaha masih mengandalkan sistem pemesanan konvensional , yang membatasi jangkauan pasar mereka di tengah era digital. Padahal, UMKM adalah tulang punggung perekonomian yang menyerap sebagian besar tenaga kerja nasional. Misi kami sederhana: menjadi jembatan digital bagi mereka untuk bertumbuh."
   ];
 
   @override
@@ -56,7 +51,10 @@ class _AboutUsViewState extends State<AboutUsView> {
                     ),
                     IconButton(
                       onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const MyOrderView()));
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const MyOrderView()));
                       },
                       icon: Image.asset(
                         "assets/img/shopping_cart.png",
@@ -72,7 +70,6 @@ class _AboutUsViewState extends State<AboutUsView> {
                 shrinkWrap: true,
                 padding: EdgeInsets.zero,
                 itemCount: aboutTextArr.length,
-               
                 itemBuilder: ((context, index) {
                   var txt = aboutTextArr[index] as String? ?? "";
                   return Container(
@@ -96,8 +93,7 @@ class _AboutUsViewState extends State<AboutUsView> {
                           child: Text(
                             txt,
                             style: TextStyle(
-                                color: Tcolor.primaryText,
-                                fontSize: 14),
+                                color: Tcolor.primaryText, fontSize: 14),
                           ),
                         ),
                       ],

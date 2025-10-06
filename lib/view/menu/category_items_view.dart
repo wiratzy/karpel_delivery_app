@@ -4,6 +4,7 @@ import 'package:karpel_food_delivery/common/color_extension.dart';
 import 'package:karpel_food_delivery/common_widget/recent_item_row.dart';
 import 'package:karpel_food_delivery/providers/auth_provider.dart';
 import 'package:karpel_food_delivery/providers/category_items_provider.dart';
+import 'package:karpel_food_delivery/view/menu/item_details_view.dart';
 import 'package:provider/provider.dart';
 
 class CategoryItemsView extends StatefulWidget {
@@ -81,6 +82,13 @@ class _CategoryItemsViewState extends State<CategoryItemsView> {
                             return RecentItemRow(
                               rObj: item,
                               onTap: () {
+                                 Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  ItemDetailsView(itemId: item.id),
+                            ),
+                          );
                                 // Add navigation to item details if needed
                               },
                             );

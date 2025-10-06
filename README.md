@@ -1,16 +1,29 @@
-# karpel_food_delivery
+# 🍔 Karpel Food Delivery App
 
-A new Flutter project.
+Aplikasi **Food Delivery** berbasis **Flutter** yang terintegrasi dengan REST API.  
+Project ini dibuat sebagai bagian dari portfolio untuk menunjukkan kemampuan dalam pengembangan aplikasi mobile end-to-end.
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+## 🚀 Features
+- 🔑 **Authentication**: Login & Register pengguna
+- 🍱 **Browse Menu**: Melihat daftar makanan & minuman
+- 🛒 **Cart System**: Tambah, update, dan hapus item dalam keranjang
+- 💳 **Checkout**: Pemesanan dengan metode pembayaran (COD/Online)
+- 🔔 **Order Tracking**: Status pesanan (Pending, Process, Delivered)
+- 👤 **User Profile**: Update profil & histori pesanan
 
-A few resources to get you started if this is your first Flutter project:
+---
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## 🛠️ Tech Stack
+- **Flutter** (Frontend Mobile)
+- **Dart** (Programming Language)
+- **REST API** (Backend: Laravel)
+- **Provider / Riverpod** (State Management)
+- **HTTP Package** (API Integration)
+- **Shared Preferences** (Local Storage)
+- **Firebase** (opsional: untuk notifikasi/push)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+---
+
+## 📂 Project Structure

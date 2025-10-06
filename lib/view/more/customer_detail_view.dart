@@ -1,28 +1,32 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:karpel_food_delivery/common/color_extension.dart';
 import 'package:provider/provider.dart';
 import 'package:karpel_food_delivery/models/order_model.dart';
 import 'package:karpel_food_delivery/providers/customer_order_provider.dart';
 import 'package:karpel_food_delivery/providers/auth_provider.dart';
 import 'package:karpel_food_delivery/services/storage_services.dart';
-import 'package:karpel_food_delivery/view/more/my_orders_view.dart';
 
 class CustomerDetailView extends StatefulWidget {
   final int orderId;
-  const CustomerDetailView({super.key, required this.orderId});
+  final int orderSequence;
+
+  const CustomerDetailView(
+      {super.key, required this.orderId, required this.orderSequence});
 
   @override
   State<CustomerDetailView> createState() => _CustomerDetailViewState();
 }
 
 class _CustomerDetailViewState extends State<CustomerDetailView> {
-  Order? order;
-  bool isLoading = true;
+  Order? _order;
+  bool _isLoading = true;
+  String? _error;
 
-  DateTime? timeoutTime;
-  Duration remainingTime = Duration.zero;
-  Timer? countdownTimer;
+  DateTime? _timeoutTime;
+  Duration _remainingTime = Duration.zero;
+  Timer? _countdownTimer;
 
   @override
   void initState() {
@@ -31,288 +35,544 @@ class _CustomerDetailViewState extends State<CustomerDetailView> {
   }
 
   Future<void> _loadDetail() async {
-    final token = await StorageService().getToken();
-    if (token == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Token tidak ditemukan.")),
-      );
-      return;
-    }
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
 
     try {
+      final token = await StorageService().getToken();
+      if (token == null) throw Exception("Token tidak ditemukan.");
+
       final data = await context
           .read<CustomerOrderProvider>()
           .fetchOrderById(token, widget.orderId);
+
+      if (!mounted) return;
       setState(() {
-        order = data;
-        timeoutTime = order!.orderTimeoutAt?.toLocal();
-        remainingTime = timeoutTime?.difference(DateTime.now()) ?? Duration.zero;
-        startCountdown();
-        isLoading = false;
+        _order = data;
+        if (_order?.orderTimeoutAt != null) {
+          _timeoutTime = _order!.orderTimeoutAt!.toLocal();
+          _startCountdown();
+        }
+        _isLoading = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
-        order = null;
-        isLoading = false;
+        _error = 'Gagal memuat detail pesanan.';
+        _isLoading = false;
       });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Gagal memuat detail pesanan.')),
-      );
     }
   }
 
-  Future<Map<String, int>?> showRatingDialog(BuildContext context) async {
-    double? restoRating = 1;
-    double? itemRating = 1;
-
-    return await showDialog<Map<String, int>>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) => AlertDialog(
-            title: const Text('Beri Rating'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('Rating untuk Restoran:'),
-                Slider(
-                  value: restoRating ?? 1,
-                  min: 1,
-                  max: 5,
-                  divisions: 4,
-                  label: '${restoRating?.toStringAsFixed(0)}',
-                  onChanged: (value) => setState(() => restoRating = value),
-                ),
-                const SizedBox(height: 12),
-                const Text('Rating untuk Makanan:'),
-                Slider(
-                  value: itemRating ?? 1,
-                  min: 1,
-                  max: 5,
-                  divisions: 4,
-                  label: '${itemRating?.toStringAsFixed(0)}',
-                  onChanged: (value) => setState(() => itemRating = value),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Batal'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context, {
-                  'restaurant_rating': restoRating!.toInt(),
-                  'item_rating': itemRating!.toInt(),
-                }),
-                child: const Text('Simpan'),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  void startCountdown() {
-    countdownTimer?.cancel();
-    countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+  void _startCountdown() {
+    _countdownTimer?.cancel();
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (!mounted || _timeoutTime == null) {
+        _countdownTimer?.cancel();
+        return;
+      }
       final now = DateTime.now();
+      final diff = _timeoutTime!.difference(now);
       setState(() {
-        remainingTime = timeoutTime!.difference(now);
-        if (remainingTime.isNegative) {
-          countdownTimer?.cancel();
-          remainingTime = Duration.zero;
-        }
+        _remainingTime = diff.isNegative ? Duration.zero : diff;
       });
+      if (diff.isNegative) {
+        _countdownTimer?.cancel();
+      }
     });
   }
 
-  Future<void> _updateOrderStatus(String newStatus, {int? restoRating, int? itemRating}) async {
+  Future<void> _updateOrderStatus(String newStatus,
+      {int? restoRating, int? itemRating, String? reviewText}) async {
     final token = context.read<AuthProvider>().token;
-    if (token == null || order == null) return;
+    if (token == null || _order == null) return;
 
     try {
       await context.read<CustomerOrderProvider>().updateOrderStatus(
-        token,
-        order!.id,
-        newStatus,
-        restaurantRating: restoRating,
-        itemRating: itemRating,
-      );
-
-      setState(() {
-        order = order!.copyWith(status: newStatus);
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Pesanan telah diselesaikan!")),
-      );
+            token,
+            _order!.id,
+            newStatus,
+            restaurantRating: restoRating,
+            itemRating: itemRating,
+            reviewText: reviewText,
+          );
+      if (mounted) {
+        setState(() => _order = _order!.copyWith(status: newStatus));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Pesanan telah diselesaikan!"),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Gagal memperbarui status: $e")),
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Gagal memperbarui status: $e")),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleCompleteOrder() async {
+    final result = await _showRatingDialog(context);
+    if (result != null && mounted) {
+      await _updateOrderStatus(
+        'berhasil',
+        restoRating: result['restaurant_rating'],
+        itemRating: result['item_rating'],
+        reviewText: result['review_text'], // 👉 kirim komentar
       );
     }
   }
 
   @override
   void dispose() {
-    countdownTimer?.cancel();
+    _countdownTimer?.cancel();
     super.dispose();
   }
 
+  // Memecah UI menjadi beberapa method agar lebih rapi dan elegan
   @override
   Widget build(BuildContext context) {
-    final currency = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text("Detail Pesanan"),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context, MyOrdersView());
-          },
-        ),
+        backgroundColor: Tcolor.primary,
+        foregroundColor: Tcolor.white,
+        elevation: 1,
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : order == null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+      body: _buildBody(),
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (_error != null || _order == null) {
+      return _buildErrorView();
+    }
+
+    final currency =
+        NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+
+    return RefreshIndicator(
+      onRefresh: _loadDetail,
+      child: ListView(
+        padding: const EdgeInsets.all(16.0),
+        children: [
+          _buildHeaderCard(_order!),
+          if (_order!.status == 'menunggu_konfirmasi') ...[
+            const SizedBox(height: 16),
+            _buildCountdownCard(),
+          ],
+          const SizedBox(height: 16),
+          _buildRestaurantInfoCard(_order!, currency),
+          const SizedBox(height: 16),
+          _buildOrderItemsCard(_order!, currency),
+          const SizedBox(height: 16),
+          _buildDeliveryDetailsCard(_order!),
+          const SizedBox(height: 16),
+          _buildPricingSummaryCard(_order!, currency),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeaderCard(Order order) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Pesanan Ke-: ${widget.orderSequence}",
+              style: Theme.of(context)
+                  .textTheme
+                  .titleMedium
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              // Gunakan CrossAxisAlignment.center agar chip dan tombol sejajar vertikal
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // PERBAIKAN 1: Bungkus bagian kiri (status) dengan Expanded
+                // Ini akan mengambil semua ruang yang tersisa setelah tombol ditempatkan.
+                Expanded(
+                  child: Row(
                     children: [
-                      const Icon(Icons.error, color: Colors.red, size: 48),
-                      const SizedBox(height: 12),
-                      const Text("Gagal memuat data pesanan",
-                          style: TextStyle(fontSize: 16)),
-                      const SizedBox(height: 8),
-                      ElevatedButton(
-                        onPressed: _loadDetail,
-                        child: const Text("Coba Lagi"),
+                      Text("Status: ",
+                          style: Theme.of(context).textTheme.titleSmall),
+                      // PERBAIKAN 2: Bungkus Chip dengan Flexible
+                      // Ini memungkinkan Chip untuk mengecil jika perlu, mencegah overflow.
+                      Flexible(
+                        child: Chip(
+                          label: Text(
+                            order.status.replaceAll('_', ' ').toUpperCase(),
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold),
+                            overflow: TextOverflow
+                                .ellipsis, // Tambahkan ini agar teks tidak terpotong kasar
+                          ),
+                          backgroundColor: _getStatusColor(order.status),
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          // Mengurangi padding internal default dari Chip
+                          labelPadding:
+                              const EdgeInsets.symmetric(horizontal: 4.0),
+                          materialTapTargetSize:
+                              MaterialTapTargetSize.shrinkWrap,
+                        ),
                       ),
                     ],
                   ),
-                )
-              : RefreshIndicator(
-                  onRefresh: _loadDetail,
-                  child: SingleChildScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text("ID Pesanan: #${order!.id}",
-                                style: const TextStyle(fontWeight: FontWeight.bold)),
-                            if (order!.status == 'berhasil')
-                              const Icon(Icons.check_circle, color: Colors.green)
-                          ],
+                ),
+                // Spacer tidak lagi diperlukan karena Expanded sudah mengatur ruang.
+
+                // Tombol akan ditempatkan terlebih dahulu, lalu sisa ruangnya untuk status.
+                if (order.status == 'diantar')
+                  ElevatedButton.icon(
+                    onPressed: _handleCompleteOrder,
+                    icon: const Icon(Icons.check_circle_outline, size: 20),
+                    label: const Text("Selesaikan"),
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20)),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8) // Atur padding tombol
                         ),
-                        const SizedBox(height: 4),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text("Status: ${order!.status.toUpperCase()}",
-                                style: const TextStyle(fontWeight: FontWeight.bold)),
-                            if (order!.status == 'diantar')
-                              ElevatedButton(
-                                onPressed: () async {
-                                  final result = await showRatingDialog(context);
-                                  if (result != null) {
-                                    await _updateOrderStatus('berhasil',
-                                      restoRating: result['restaurant_rating'],
-                                      itemRating: result['item_rating']
-                                    );
-                                  }
-                                },
-                                child: const Text("Selesaikan"),
-                                style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        if (order!.status == 'menunggu_konfirmasi') ...[
-                          const Divider(),
-                          const Text("Batas waktu konfirmasi:",
-                              style: TextStyle(fontWeight: FontWeight.bold)),
-                          Text(DateFormat('dd MMM yyyy HH:mm:ss').format(timeoutTime!)),
-                          const SizedBox(height: 4),
-                          Text(
-                            "Sisa waktu: ${remainingTime.inMinutes}:${(remainingTime.inSeconds % 60).toString().padLeft(2, '0')}",
-                            style:
-                                const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                        const Divider(),
-                        const Text("Item yang dipesan:",
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 8),
-                        ...order!.items.map((item) => ListTile(
-                              contentPadding: EdgeInsets.zero,
-                              leading: Image.network(
-                                item.item.image,
-                                width: 50,
-                                height: 50,
-                                fit: BoxFit.cover,
-                              ),
-                              title: Text(item.item.name),
-                              subtitle: Text(
-                                  "${item.quantity} x ${currency.format(item.price)}"),
-                            )),
-                        const Divider(),
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text("Alamat Pengiriman"),
-                          subtitle: Text(order!.address),
-                        ),
-                        ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: const Text("Metode Pembayaran"),
-                          subtitle: Text(order!.paymentMethod),
-                        ),
-                        const Divider(),
-                        if ((order!.status == 'diantar' || order!.status == 'berhasil') &&
-                            order!.driver != null) ...[
-                          ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            title: const Text("Driver"),
-                            subtitle:
-                                Text("${order!.driver!.name} • ${order!.driver!.phone}"),
-                          ),
-                        ],
-                        const Divider(),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text("Subtotal"),
-                            Text(currency.format(order!.totalPrice - order!.deliveryFee)),
-                          ],
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text("Delivery Fee"),
-                            Text(currency.format(order!.deliveryFee)),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text("Total", style: TextStyle(fontWeight: FontWeight.bold)),
-                            Text(currency.format(order!.totalPrice),
-                                style: const TextStyle(fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                      ],
+                  )
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCountdownCard() {
+    return Card(
+      elevation: 2,
+      color: Colors.amber.shade50,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Icon(Icons.timer_outlined, color: Tcolor.primary, size: 30),
+            const SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("Batas Waktu Konfirmasi",
+                    style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(DateFormat('dd MMM yyyy, HH:mm:ss').format(_timeoutTime!)),
+                const SizedBox(height: 4),
+                Text(
+                  "Sisa Waktu: ${_remainingTime.inMinutes.toString().padLeft(2, '0')}:${(_remainingTime.inSeconds % 60).toString().padLeft(2, '0')}",
+                  style: TextStyle(
+                      color: Tcolor.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16),
+                ),
+              ],
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRestaurantInfoCard(Order order, NumberFormat currency) {
+    final restaurant = order.items.first.item.restaurant;
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Dari Restoran",
+                style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 12),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  restaurant.image,
+                  width: 50,
+                  height: 50,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const Icon(Icons.restaurant, size: 40),
+                ),
+              ),
+              title: Text(restaurant.name,
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: Text(restaurant.location!,
+                  style: const TextStyle(color: Colors.grey)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOrderItemsCard(Order order, NumberFormat currency) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Item Dipesan",
+                style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 12),
+            ...order.items.map((item) => Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0),
+                  child: ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        item.item.image,
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(Icons.fastfood, size: 40),
+                      ),
+                    ),
+                    title: Text(item.item.name,
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text(
+                        "${item.quantity} x ${currency.format(item.price)}"),
+                    trailing: Text(currency.format(item.quantity * item.price),
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDeliveryDetailsCard(Order order) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Detail Pengiriman",
+                style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 12),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.location_on_outlined, color: Tcolor.primary),
+              title: const Text("Alamat Pengiriman"),
+              subtitle: Text(order.address),
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.payment_outlined, color: Tcolor.primary),
+              title: const Text("Metode Pembayaran"),
+              subtitle:
+                  Text(order.paymentMethod.replaceAll('_', ' ').toUpperCase()),
+            ),
+            if (order.driver != null)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading:
+                    Icon(Icons.delivery_dining_outlined, color: Tcolor.primary),
+                title: const Text("Driver"),
+                subtitle:
+                    Text("${order.driver!.name} • ${order.driver!.phone}"),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPricingSummaryCard(Order order, NumberFormat currency) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            _buildPriceRow("Subtotal",
+                currency.format(order.totalPrice - order.deliveryFee)),
+            const SizedBox(height: 8),
+            _buildPriceRow("Ongkos Kirim", currency.format(order.deliveryFee)),
+            const Divider(height: 24),
+            _buildPriceRow(
+              "Total",
+              currency.format(order.totalPrice),
+              isTotal: true,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPriceRow(String label, String value, {bool isTotal = false}) {
+    final style = isTotal
+        ? Theme.of(context)
+            .textTheme
+            .titleMedium
+            ?.copyWith(fontWeight: FontWeight.bold)
+        : Theme.of(context).textTheme.bodyLarge;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: style),
+        Text(value, style: style),
+      ],
+    );
+  }
+
+  Widget _buildErrorView() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.cloud_off, color: Colors.grey.shade400, size: 80),
+            const SizedBox(height: 20),
+            Text(
+              _error ?? "Terjadi kesalahan",
+              textAlign: TextAlign.center,
+              style: Theme.of(context)
+                  .textTheme
+                  .titleLarge
+                  ?.copyWith(color: Colors.black54),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              "Mohon periksa koneksi internet Anda dan coba lagi.",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.black45),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: _loadDetail,
+              icon: const Icon(Icons.refresh),
+              label: const Text("Coba Lagi"),
+              style: ElevatedButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Helper untuk warna status
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'menunggu_konfirmasi':
+        return Colors.orange;
+      case 'diproses':
+        return Colors.blue;
+      case 'diantar':
+        return Colors.purple;
+      case 'berhasil':
+        return Colors.green;
+      case 'dibatalkan':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  // Dialog rating baru yang lebih elegan dengan bintang
+  Future<Map<String, dynamic>?> _showRatingDialog(BuildContext context) async {
+    double restoRating = 3.0;
+    double itemRating = 3.0;
+    final TextEditingController reviewController = TextEditingController();
+
+    return await showDialog<Map<String, dynamic>>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Beri Ulasan Anda'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text("Rating Restoran: ${restoRating.toInt()}"),
+                  Slider(
+                    value: restoRating,
+                    min: 1,
+                    max: 5,
+                    divisions: 4,
+                    onChanged: (val) => setDialogState(() => restoRating = val),
+                  ),
+                  Text("Rating Makanan: ${itemRating.toInt()}"),
+                  Slider(
+                    value: itemRating,
+                    min: 1,
+                    max: 5,
+                    divisions: 4,
+                    onChanged: (val) => setDialogState(() => itemRating = val),
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: reviewController,
+                    maxLines: 3,
+                    decoration: const InputDecoration(
+                      labelText: "Berikan Ulasan Terbaik...",
+                      border: OutlineInputBorder(),
                     ),
                   ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Batal'),
                 ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(context, {
+                    'restaurant_rating': restoRating.toInt(),
+                    'item_rating': itemRating.toInt(),
+                    'review_text': reviewController.text, // string aman 👍
+                  }),
+                  child: const Text('Kirim Ulasan'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }

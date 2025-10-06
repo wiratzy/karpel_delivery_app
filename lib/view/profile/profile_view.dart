@@ -32,16 +32,28 @@ class _ProfileViewState extends State<ProfileView> {
   @override
   void initState() {
     super.initState();
+    _loadUserData();
+  }
+
+  void _loadUserData() {
     final user = Provider.of<AuthProvider>(context, listen: false).user;
     if (user != null) {
-      txtName.text = user.name;
-      txtEmail.text = user.email;
-      txtMobile.text = user.phone;
-      selectedAddress = user.address;
-      latitude = user.latitude;
-      longitude = user.longitude;
-      // latitude & longitude bisa disimpan saat login jika backend mengirim datanya
+      setState(() {
+        txtName.text = user.name;
+        txtEmail.text = user.email;
+        txtMobile.text = user.phone;
+        selectedAddress = user.address;
+        latitude = user.latitude;
+        longitude = user.longitude;
+      });
     }
+  }
+
+  Future<void> _refreshUserData() async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    await auth.fetchUser();
+    _loadUserData();
+    setState(() {}); // Refresh UI
   }
 
   @override
@@ -69,16 +81,20 @@ class _ProfileViewState extends State<ProfileView> {
     final auth = Provider.of<AuthProvider>(context, listen: false);
     final messenger = ScaffoldMessenger.of(context);
 
-    // 1. Validasi field teks dasar tidak boleh kosong
-    if (txtName.text.isEmpty || txtEmail.text.isEmpty || txtMobile.text.isEmpty || selectedAddress == null) {
+    if (txtName.text.isEmpty ||
+        txtEmail.text.isEmpty ||
+        txtMobile.text.isEmpty ||
+        selectedAddress == null) {
       messenger.showSnackBar(
-        const SnackBar(content: Text("Nama, Email, No. HP, dan Alamat tidak boleh kosong")),
+        const SnackBar(
+            content:
+                Text("Nama, Email, No. HP, dan Alamat tidak boleh kosong")),
       );
       return;
     }
 
-    // 2. Validasi password (jika diisi)
-    if (txtPassword.text.isNotEmpty && txtPassword.text != txtConfirmPassword.text) {
+    if (txtPassword.text.isNotEmpty &&
+        txtPassword.text != txtConfirmPassword.text) {
       messenger.showSnackBar(
         const SnackBar(content: Text("Password tidak cocok")),
       );
@@ -86,24 +102,25 @@ class _ProfileViewState extends State<ProfileView> {
     }
 
     try {
-      // Karena latitude & longitude sudah diinisialisasi, kita bisa langsung mengirimnya.
-      // API Anda harus bisa menangani jika nilainya null (untuk user yang belum pernah set lokasi sama sekali).
-      await auth.updateUser(
+      final updatedUser = await auth.updateUser(
         name: txtName.text,
         email: txtEmail.text,
         phone: txtMobile.text,
         address: selectedAddress!,
-        latitude: latitude!,   // Nilai ini sekarang sudah ada dari initState
-        longitude: longitude!, // Nilai ini sekarang sudah ada dari initState
+        latitude: latitude!,
+        longitude: longitude!,
         password: txtPassword.text.isNotEmpty ? txtPassword.text : null,
         photo: image != null ? File(image!.path) : null,
       );
+      _loadUserData(); // <-- ini penting
 
       if (mounted) {
-        setState(() => image = null);
-        txtPassword.clear();
-        txtConfirmPassword.clear();
-        
+        setState(() {
+          image = null;
+          txtPassword.clear();
+          txtConfirmPassword.clear();
+        });
+
         messenger.showSnackBar(
           const SnackBar(content: Text("Profil berhasil diperbarui")),
         );
@@ -114,7 +131,6 @@ class _ProfileViewState extends State<ProfileView> {
       );
     }
   }
-
 
   Future<void> handleLogout() async {
     final auth = Provider.of<AuthProvider>(context, listen: false);
@@ -130,57 +146,65 @@ class _ProfileViewState extends State<ProfileView> {
     final user = auth.user;
 
     return Scaffold(
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(vertical: 20),
-        child: Column(
-          children: [
-            const SizedBox(height: 46),
-            _buildHeader(),
-            const SizedBox(height: 20),
-            _buildProfileImage(user?.photo),
-            _buildEditPhotoButton(),
-            Text(
-              "Hi there ${user?.name ?? 'User'}!",
-              style: TextStyle(
-                color: Tcolor.primaryText,
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            TextButton(
-              onPressed: handleLogout,
-              child: Text(
-                "Sign Out",
+      body: RefreshIndicator(
+        onRefresh: _refreshUserData,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            children: [
+              const SizedBox(height: 46),
+              _buildHeader(),
+              const SizedBox(height: 20),
+              _buildProfileImage(user?.photo),
+              _buildEditPhotoButton(),
+              Text(
+                "Hi there ${user?.name ?? 'User'}!",
                 style: TextStyle(
-                  color: Tcolor.secondaryText,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
+                  color: Tcolor.primaryText,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-            _buildField("Name", txtName),
-            _buildField("Email", txtEmail, keyboardType: TextInputType.emailAddress),
-            _buildField("Mobile No", txtMobile, keyboardType: TextInputType.phone),
-            _buildAddressField(),
-            _buildField("Password", txtPassword, obscureText: true, hint: "New Password (optional)"),
-            _buildField("Confirm Password", txtConfirmPassword, obscureText: true, hint: "Confirm Password"),
-            const SizedBox(height: 20),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: IgnorePointer(
-                ignoring: auth.isLoading,
-                child: Opacity(
-                  opacity: auth.isLoading ? 0.5 : 1.0,
-                  child: RoundButton(
-                    title: auth.isLoading ? "Loading..." : "Save",
-                    onPressed: handleUpdate,
+              TextButton(
+                onPressed: handleLogout,
+                child: Text(
+                  "Sign Out",
+                  style: TextStyle(
+                    color: Tcolor.secondaryText,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
-            ),
-            const SizedBox(height: 20),
-          ],
+              const SizedBox(height: 20),
+              _buildField("Name", txtName),
+              _buildField("Email", txtEmail,
+                  keyboardType: TextInputType.emailAddress),
+              _buildField("Mobile No", txtMobile,
+                  keyboardType: TextInputType.phone),
+              _buildAddressField(),
+              _buildField("Password", txtPassword,
+                  obscureText: true, hint: "New Password (optional)"),
+              _buildField("Confirm Password", txtConfirmPassword,
+                  obscureText: true, hint: "Confirm Password"),
+              const SizedBox(height: 20),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: IgnorePointer(
+                  ignoring: auth.isLoading,
+                  child: Opacity(
+                    opacity: auth.isLoading ? 0.5 : 1.0,
+                    child: RoundButton(
+                      title: auth.isLoading ? "Loading..." : "Save",
+                      onPressed: handleUpdate,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
         ),
       ),
     );
@@ -201,8 +225,10 @@ class _ProfileViewState extends State<ProfileView> {
             ),
           ),
           IconButton(
-            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MyOrderView())),
-            icon: Image.asset("assets/img/shopping_cart.png", width: 25, height: 25),
+            onPressed: () => Navigator.push(context,
+                MaterialPageRoute(builder: (_) => const MyOrderView())),
+            icon: Image.asset("assets/img/shopping_cart.png",
+                width: 25, height: 25),
           ),
         ],
       ),
@@ -210,41 +236,38 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   Widget _buildProfileImage(String? photoUrl) {
-
-
-
-
-  return Container(
-    width: 100,
-    height: 100,
-    decoration: BoxDecoration(
-      color: Tcolor.placeholder,
-      borderRadius: BorderRadius.circular(50),
-    ),
-    child: image != null // Ini untuk gambar yang baru dipilih dari galeri
-        ? ClipRRect(
-            borderRadius: BorderRadius.circular(50),
-            child: Image.file(
-              File(image!.path),
-              fit: BoxFit.cover, // <-- Pastikan ini
-            ),
-          )
-        : photoUrl != null && photoUrl.isNotEmpty 
-            ? ClipRRect(
-                borderRadius: BorderRadius.circular(50),
-                child: Image.network(
-                  photoUrl,
-                  fit: BoxFit.cover, // <-- Pastikan ini
-                  errorBuilder: (context, error, stackTrace) {
-                    print('Error loading image from network: $error');
-                    print('Image URL attempted: $photoUrl');
-                    return Icon(Icons.error, size: 65, color: Colors.red);
-                  },
-                ),
-              )
-            : Icon(Icons.person, size: 65, color: Tcolor.secondaryText),
-  );
-}
+    return Container(
+      width: 100,
+      height: 100,
+      decoration: BoxDecoration(
+        color: Tcolor.placeholder,
+        borderRadius: BorderRadius.circular(50),
+      ),
+      child: image != null
+          ? ClipRRect(
+          borderRadius: BorderRadius.circular(50),
+          child: Image.file(
+            File(image!.path),
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+          return Icon(Icons.person, size: 65, color: Tcolor.secondaryText);
+            },
+          ),
+        )
+          : photoUrl != null && photoUrl.isNotEmpty
+          ? ClipRRect(
+          borderRadius: BorderRadius.circular(50),
+          child: Image.network(
+            photoUrl,
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return Icon(Icons.person, size: 65, color: Tcolor.secondaryText);
+            },
+          ),
+            )
+          : Icon(Icons.person, size: 65, color: Tcolor.secondaryText),
+    );
+  }
 
   Widget _buildEditPhotoButton() {
     return TextButton.icon(
@@ -255,12 +278,15 @@ class _ProfileViewState extends State<ProfileView> {
         }
       },
       icon: Icon(Icons.edit, color: Tcolor.primary, size: 12),
-      label: Text("Edit Profile", style: TextStyle(color: Tcolor.primary, fontSize: 12)),
+      label: Text("Edit Profile",
+          style: TextStyle(color: Tcolor.primary, fontSize: 12)),
     );
   }
 
   Widget _buildField(String title, TextEditingController controller,
-      {TextInputType keyboardType = TextInputType.text, bool obscureText = false, String? hint}) {
+      {TextInputType keyboardType = TextInputType.text,
+      bool obscureText = false,
+      String? hint}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 20),
       child: RoundTitleTextfield(
@@ -292,7 +318,9 @@ class _ProfileViewState extends State<ProfileView> {
                 child: Text(
                   selectedAddress ?? "Pilih lokasi di Maps",
                   style: TextStyle(
-                    color: selectedAddress == null ? Tcolor.placeholder : Tcolor.primaryText,
+                    color: selectedAddress == null
+                        ? Tcolor.placeholder
+                        : Tcolor.primaryText,
                     fontSize: 14,
                   ),
                 ),

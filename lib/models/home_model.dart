@@ -10,7 +10,16 @@ class Restaurant {
   final String? foodType;
   final String? location;
   final double deliveryFee;
-  
+  Restaurant.dummy()
+      : id = 0,
+        name = "Restaurant Name",
+        image = "",
+        rate = 4.5,
+        rating = 50,
+        type = "Type",
+        foodType = "Food Type",
+        location = "Location",
+        deliveryFee = 5000;
 
   Restaurant({
     required this.id,
@@ -23,6 +32,8 @@ class Restaurant {
     this.location,
     required this.deliveryFee,
   });
+
+  
 
   factory Restaurant.fromJson(Map<String, dynamic> json) => Restaurant(
         id: json['id'] ?? 0,
@@ -69,7 +80,9 @@ class Item {
   final String? price;
   final int? itemCategoryId;
   final int? restaurantId;
-    final ItemCategory? itemCategory; // <- tambahkan ini
+    final ItemCategory? itemCategory; 
+      final String? categoryName; 
+
 
 
   Item({
@@ -84,8 +97,20 @@ class Item {
     this.itemCategoryId,
     this.restaurantId,
     this.itemCategory,
+    this.categoryName,
   });
-
+factory Item.dummy() {
+  return Item(
+    id: 0,
+    name: 'Item Name',
+    image: '',
+    rate: '0.0',
+    rating: 0,
+    type: 'Item Type',
+    price: '0',
+    restaurant: Restaurant.dummy(), // Menggunakan dummy restaurant
+  );
+}
   factory Item.fromJson(Map<String, dynamic> json) {
       print("DEBUG restaurant_id value: ${json['restaurant_id']}");
 
@@ -104,6 +129,7 @@ class Item {
        itemCategory: json['item_category'] != null
           ? ItemCategory.fromJson(json['item_category'])
           : null,
+      categoryName: json['category_name'] ?? '',
     );
   }
   Map<String, dynamic> toJson() => {
@@ -133,6 +159,14 @@ class ItemCategory {
     required this.image,
      this.itemsCount,
   });
+
+  factory ItemCategory.dummy() {
+  return ItemCategory(
+    id: 0,
+    name: 'Category',
+    image: '', 
+  );
+}
 
   factory ItemCategory.fromJson(Map<String, dynamic> json) => ItemCategory(
         id: json['id'] ?? 0,
